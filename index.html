@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhiteIndex Investment Map</title>
+<style>html,body{margin:0;padding:0;height:100%;background:#0b0d10;}</style>
+</head>
+<body>
+
+<div class="wi-map-wrapper dark-theme" id="wi-map-root">
+    <div class="wi-map-sidebar" id="wi-sidebar-element">
+        <div class="wi-sidebar-header">
+            <span class="wi-sidebar-tag" data-i18n="sidebar_tag">Panama Geospatial Assets</span>
+            <h2 data-i18n="sidebar_title">Инвест-карта</h2>
+            <p data-i18n="sidebar_desc">Фильтрация инфраструктурных и коммерческих слоев в Панаме</p>
+        </div>
+        <div class="wi-filter-group">
+            <label class="wi-filter-label" data-i18n="group_projects">Объекты недвижимости</label>
+            <div class="wi-checkbox-list">
+                <label class="wi-checkbox-item"><input type="checkbox" id="layer-projects-construction" checked onchange="toggleProjectStatus('construction', this.checked)"><span class="dot-indicator gold-dot"></span><span data-i18n="status_construction">Under Construction</span></label>
+                <label class="wi-checkbox-item"><input type="checkbox" id="layer-projects-presale" checked onchange="toggleProjectStatus('presale', this.checked)"><span class="dot-indicator blue-dot"></span><span data-i18n="status_presale">Pre-sale</span></label>
+                <label class="wi-checkbox-item"><input type="checkbox" id="layer-projects-ready" checked onchange="toggleProjectStatus('ready', this.checked)"><span class="dot-indicator green-dot"></span><span data-i18n="status_ready">Ready</span></label>
+                <label class="wi-checkbox-item"><input type="checkbox" id="layer-projects-sold_out" checked onchange="toggleProjectStatus('sold_out', this.checked)"><span class="dot-indicator grey-dot"></span><span data-i18n="status_sold_out">Sold Out</span></label>
+            </div>
+        </div>
+        <div class="wi-filter-group">
+            <label class="wi-filter-label" data-i18n="group_services">Инфраструктура и Сервисы</label>
+            <div class="wi-checkbox-list">
+                <label class="wi-checkbox-item"><input type="checkbox" id="layer-education" onchange="toggleIndependentLayer('education', 'poi_label', ['match', ['get', 'maki'], ['education', 'school', 'college', 'university'], true, false], 'point', this.checked)"><span class="dot-indicator blue-dot"></span><span data-i18n="layer_education">Education (Образование)</span></label>
+                <label class="wi-checkbox-item"><input type="checkbox" id="layer-medicine" onchange="toggleIndependentLayer('medicine', 'poi_label', ['match', ['get', 'maki'], ['hospital'], true, false], 'point', this.checked)"><span class="dot-indicator blue-dot"></span><span data-i18n="layer_medicine">Medicine (Медицина)</span></label>
+                <label class="wi-checkbox-item"><input type="checkbox" id="layer-foodstores" onchange="toggleIndependentLayer('foodstores', 'poi_label', ['match', ['get', 'maki'], ['grocery', 'shop', 'supermarket'], true, false], 'point', this.checked)"><span class="dot-indicator purple-dot"></span><span data-i18n="layer_foodstores">Foodstores (Магазины)</span></label>
+            </div>
+        </div>
+        <div class="wi-filter-group">
+            <label class="wi-filter-label" data-i18n="group_transport">Транспортные сети</label>
+            <div class="wi-checkbox-list">
+                <label class="wi-checkbox-item"><input type="checkbox" id="layer-motorways" onchange="toggleIndependentLayer('motorways', 'road', ['match', ['get', 'class'], ['motorway', 'trunk'], true, false], 'line', this.checked)"><span class="dot-indicator gold-dot"></span><span data-i18n="layer_motorways">Motorways (Шоссе)</span></label>
+                <label class="wi-checkbox-item"><input type="checkbox" id="layer-traffic" onchange="toggleIndependentLayer('traffic', 'road', ['match', ['get', 'class'], ['primary', 'secondary'], true, false], 'line', this.checked)"><span class="dot-indicator gold-dot"></span><span data-i18n="layer_traffic">Traffic (Трафик)</span></label>
+                <label class="wi-checkbox-item"><input type="checkbox" id="layer-airports" onchange="toggleIndependentLayer('airports', 'airport_label', ['has', 'maki'], 'point', this.checked)"><span class="dot-indicator gold-dot"></span><span data-i18n="layer_airports">Airports (Аэропорты)</span></label>
+            </div>
+        </div>
+        <div class="wi-filter-group">
+            <label class="wi-filter-label" data-i18n="group_environment">Окружающая среда</label>
+            <div class="wi-checkbox-list">
+                <label class="wi-checkbox-item"><input type="checkbox" id="layer-waterways" onchange="toggleIndependentLayer('waterways', 'waterway', ['has', 'class'], 'line', this.checked)"><span class="dot-indicator cyan-dot"></span><span data-i18n="layer_waterways">Waterways (Водные пути)</span></label>
+                <label class="wi-checkbox-item"><input type="checkbox" id="layer-parks" onchange="toggleIndependentLayer('parks', 'landuse', ['match', ['get', 'class'], ['park', 'national_park', 'nature_reserve'], true, false], 'polygon', this.checked)"><span class="dot-indicator green-dot"></span><span data-i18n="layer_parks">Parks (Парки)</span></label>
+                <label class="wi-checkbox-item"><input type="checkbox" id="layer-hillshade" onchange="toggleDynamicHillshade(this.checked)"><span class="dot-indicator purple-dot"></span><span data-i18n="layer_hillshade">Landscape (Ландшафт)</span></label>
+            </div>
+        </div>
+        <div class="wi-sidebar-footer">
+            <div class="wi-stats"><span data-i18n="footer_mode">Режим отображения:</span> <strong style="color: #C9A84C !important;" data-i18n="footer_build">WhiteIndex Investment View</strong></div>
+        </div>
+    </div>
+    <div id="mapbox-panama-container">
+        <button id="wi-style-toggle" class="wi-map-btn" onclick="switchMapStyle()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <span id="wi-style-text" data-i18n="style_sat">Спутник</span>
+        </button>
+    </div>
+</div>
+
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
+
+<script>
+let currentMapLang = 'en';
+let activeStyleType = 'light';
+const styleUrls = {
+    light: 'mapbox://styles/konstantinvgm/cmp9dsx09002e01skbgedc555',
+    satellite: 'mapbox://styles/mapbox/satellite-streets-v12'
+};
+const translations = {
+    ru: {
+        sidebar_tag: "Panama Geospatial Assets", sidebar_title: "Инвест-карта", sidebar_desc: "Фильтрация инфраструктурных и коммерческих слоев в Панаме",
+        group_projects: "Объекты недвижимости", status_construction: "Строится", status_presale: "Пресейл", status_ready: "Готово", status_sold_out: "Продано",
+        group_services: "Инфраструктура и Сервисы", layer_education: "Education (Образование)", layer_medicine: "Medicine (Медицина)", layer_foodstores: "Foodstores (Магазины)",
+        group_transport: "Транспортные сети", layer_motorways: "Motorways (Шоссе)", layer_traffic: "Traffic (Трафик)", layer_airports: "Airports (Аэропорты)",
+        group_environment: "Окружающая среда", layer_waterways: "Waterways (Водные пути)", layer_parks: "Parks (Парки)", layer_hillshade: "Landscape (Ландшафт)",
+        footer_mode: "Режим отображения:", footer_build: "WhiteIndex Инвест-вид",
+        popup_airport: "✈️ Аэропорт", popup_education: "🎓 Образование", popup_medicine: "🏥 Медицина", style_light: "Карта", style_sat: "Спутник",
+        card_toppick: "Топ-выбор", card_from: "от", card_delivery: "Срок сдачи", card_price: "Цена от", card_units: "юнитов",
+        card_units_pricing: "Юниты и цены", card_progress: "Ход строительства", card_completed: "завершено", card_years: "г.",
+        card_profile_title: "WhiteIndex Investment Profile", card_score: "Инвест-рейтинг",
+        card_forecast: "Прогноз цены", card_yield: "Доходность аренды", card_risk: "Уровень риска", card_liquidity: "Ликвидность", card_resale: "Срок перепродажи", card_demand: "Спрос после сдачи",
+        card_view_details: "Детали проекта", card_compare: "Сравнить", card_compared: "В сравнении",
+        risk_low: "Низкий", risk_medium: "Средний", risk_high: "Высокий", demand_high: "Высокий", demand_medium: "Средний", demand_low: "Низкий"
+    },
+    en: {
+        sidebar_tag: "Panama Geospatial Assets", sidebar_title: "Investment Map", sidebar_desc: "Infrastructure and commercial layers filtering in Panama",
+        group_projects: "Real Estate Projects", status_construction: "Under Construction", status_presale: "Pre-sale", status_ready: "Ready", status_sold_out: "Sold Out",
+        group_services: "Infrastructure & Services", layer_education: "Education", layer_medicine: "Medicine", layer_foodstores: "Foodstores",
+        group_transport: "Transport Networks", layer_motorways: "Motorways", layer_traffic: "Traffic", layer_airports: "Airports",
+        group_environment: "Environment", layer_waterways: "Waterways", layer_parks: "Parks", layer_hillshade: "Landscape",
+        footer_mode: "Display mode:", footer_build: "WhiteIndex Investment View",
+        popup_airport: "✈️ Airport", popup_education: "🎓 Education", popup_medicine: "🏥 Medicine", style_light: "Map", style_sat: "Satellite",
+        card_toppick: "Top Pick", card_from: "from", card_delivery: "Delivery", card_price: "Price from", card_units: "units",
+        card_units_pricing: "Units & Pricing", card_progress: "Construction Progress", card_completed: "completed", card_years: "years",
+        card_profile_title: "WhiteIndex Investment Profile", card_score: "Investment Score",
+        card_forecast: "Price Forecast", card_yield: "Rental Yield", card_risk: "Risk Level", card_liquidity: "Liquidity Score", card_resale: "Resale Time", card_demand: "Demand After Keys",
+        card_view_details: "View Details", card_compare: "Compare", card_compared: "Comparing",
+        risk_low: "Low", risk_medium: "Medium", risk_high: "High", demand_high: "High", demand_medium: "Medium", demand_low: "Low"
+    }
+};
+function initMapLocalization() {
+    let userLang = (navigator.language || navigator.userLanguage).toLowerCase().split('-')[0];
+    if (!translations[userLang]) userLang = 'ru';
+    currentMapLang = userLang;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[userLang][key]) el.innerText = translations[userLang][key];
+    });
+}
+document.addEventListener('DOMContentLoaded', initMapLocalization);
+
+mapboxgl.accessToken = 'pk.eyJ1Ijoia29uc3RhbnRpbnZnbSIsImEiOiJjbXA5ZGV6MHQwb2h4MnJxMWgzNHkxd2NwIn0.ZMjP-Ce9x-ubDWQp2hOORw';
+const mapContainer = document.getElementById('mapbox-panama-container');
+const strictPanamaBounds = [[-82.90, 7.15], [-77.30, 9.75]];
+const map = new mapboxgl.Map({
+    container: 'mapbox-panama-container', style: styleUrls.light,
+    center: [-79.52, 8.98], zoom: 11, minZoom: 8.2, maxBounds: strictPanamaBounds, pitch: 0, scrollZoom: false
+});
+map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+const currentPopup = new mapboxgl.Popup({ closeButton: true, closeOnClick: true, className: 'wi-custom-popup' });
+
+const FALLBACK_PROJECTS = [
+  {
+    id: 'p1', name: 'Torre Vitri',
+    location: { district: 'Punta Pacifica', city: 'Panama City', country: 'Panama' },
+    coordinates: [-79.5230, 8.9880], status: 'construction',
+    coverImage: 'https://picsum.photos/seed/torrevitri/720/420',
+    investmentThesis: 'Prime oceanfront location with limited future supply.',
+    delivery: { type: 'single', date: 'Q4 2026', phases: null },
+    units: [ { type: 'Studio', count: 18, priceFrom: 145000 }, { type: '2 BR', count: 37, priceFrom: 289000 } ],
+    priceRange: { min: 145000, max: 415000, currency: 'USD' },
+    constructionProgress: { percent: 42, statusText: 'Structural works', photoUrl: 'https://picsum.photos/seed/vitriprogress/640/360' },
+    description: 'Oceanfront tower with hotel-grade amenities near the medical and business hub.',
+    highlights: ['Ocean View', 'Near Metro', 'Airbnb Friendly'],
+    investmentProfile: { developer: 'Vitri International', developerStatus: 'Platinum', priceForecast: { growthPercent: 31, periodYears: 3 }, rentalYield: 7.4, riskLevel: 'Low', liquidityScore: 84, resaleTime: '4-6 months', demandAfterKeys: 'High', investmentScore: 87 },
+    ctaUrl: '/projects/torre-vitri'
+  },
+  {
+    id: 'p6', name: 'Palmera Suites',
+    location: { district: 'El Cangrejo', city: 'Panama City', country: 'Panama' },
+    coordinates: [-79.5410, 9.0010], status: 'sold_out',
+    coverImage: 'https://picsum.photos/seed/palmera/720/420',
+    investmentThesis: 'Fully sold boutique tower — retained as a resale benchmark.',
+    delivery: { type: 'single', date: 'Delivered', phases: null },
+    units: [ { type: '1 BR', count: 36, priceFrom: 165000 }, { type: '2 BR', count: 36, priceFrom: 228000 } ],
+    priceRange: { min: 165000, max: 228000, currency: 'USD' },
+    constructionProgress: null,
+    description: 'A delivered and fully sold-out boutique residence in El Cangrejo.',
+    highlights: ['Sold Out', 'Walkable District', 'Strong Resale'],
+    investmentProfile: { developer: 'Grupo Eleta', developerStatus: 'Gold', priceForecast: { growthPercent: 20, periodYears: 3 }, rentalYield: 6.0, riskLevel: 'Low', liquidityScore: 78, resaleTime: '2-4 months', demandAfterKeys: 'High', investmentScore: 79 },
+    ctaUrl: '/projects/palmera-suites'
+  }
+];
+
+const comparedIds = new Set();
+const SUPABASE_URL = 'https://vidqebjgbzafabdocogu.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_GOowu5FveA_RwlmvgGLlSg_Twf_VdVz';
+let projects = [];
+
+function mapRow(r) {
+    return {
+        id: r.id, name: r.name, status: r.status,
+        location: { district: r.district, city: r.city, country: r.country },
+        coordinates: [Number(r.lng), Number(r.lat)],
+        coverImage: r.cover_image || null, investmentThesis: r.investment_thesis || '',
+        delivery: r.delivery || { type: 'single', date: null, phases: null },
+        units: r.units || [], priceRange: { min: r.price_min, max: r.price_max, currency: r.currency || 'USD' },
+        constructionProgress: r.construction_progress || null, description: r.description || '',
+        highlights: r.highlights || [], investmentProfile: r.investment_profile || {}, ctaUrl: r.cta_url || '#'
+    };
+}
+async function loadProjects() {
+    const notConfigured = !SUPABASE_URL || SUPABASE_URL.indexOf('ВАШ_') !== -1 || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.indexOf('ВАШ_') !== -1;
+    if (notConfigured) { projects = FALLBACK_PROJECTS; renderProjectMarkers(); return; }
+    try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 8000);
+        const url = SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/projects?select=*&is_published=eq.true&order=sort_order.asc';
+        const res = await fetch(url, { headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY }, signal: ctrl.signal });
+        clearTimeout(timer);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const rows = await res.json();
+        projects = (Array.isArray(rows) && rows.length) ? rows.map(mapRow) : FALLBACK_PROJECTS;
+    } catch (e) {
+        console.warn('[WhiteIndex] Supabase fetch failed, using demo data:', e);
+        projects = FALLBACK_PROJECTS;
+    }
+    renderProjectMarkers();
+}
+
+const projectMarkers = [];
+function statusColor(s) { if (s === 'ready') return '#34d399'; if (s === 'presale') return '#38bdf8'; if (s === 'sold_out') return '#8a8f99'; return '#C9A84C'; }
+function projectIconSVG(s) { return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 21V9L12 3L21 9V21H15V15H9V21H3Z" fill="${statusColor(s)}" fill-opacity="0.95"/></svg>`; }
+function statusLabel(s) { const t = translations[currentMapLang]; if (s === 'construction') return t.status_construction; if (s === 'presale') return t.status_presale; if (s === 'sold_out') return t.status_sold_out; return t.status_ready; }
+function escapeHTML(str) { return String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function fmtMoney(n, c) { if (n == null) return ''; const num = Number(n).toLocaleString('en-US'); return (c && c !== 'USD') ? `${num} ${c}` : `$${num}`; }
+function riskTone(l) { if (l === 'Low') return 'good'; if (l === 'High') return 'bad'; return 'warn'; }
+function demandTone(l) { if (l === 'High') return 'good'; if (l === 'Low') return 'muted'; return 'warn'; }
+function profileRow(label, v) { if (v == null || v === '') return ''; return `<div class="wi-ip-row"><span class="wi-ip-row-label">${label}</span><span class="wi-ip-row-value">${v}</span></div>`; }
+
+function renderProjectCard(p) {
+    const t = translations[currentMapLang]; const ip = p.investmentProfile || {};
+    const isSold = p.status === 'sold_out'; const topPick = ip.investmentScore != null && ip.investmentScore >= 85;
+    const coverInner = p.coverImage ? `<img class="wi-card-cover-img" src="${escapeHTML(p.coverImage)}" alt="${escapeHTML(p.name)}" onerror="this.classList.add('is-failed')">` : '';
+    const topPickBadge = topPick ? `<span class="wi-card-toppick">★ ${t.card_toppick}</span>` : '';
+    const cover = `<div class="wi-card-cover">${coverInner}<div class="wi-card-cover-fallback"><svg width="54" height="54" viewBox="0 0 24 24" fill="none"><path d="M3 21V9L12 3L21 9V21H15V15H9V21H3Z" fill="${statusColor(p.status)}"/></svg></div><span class="wi-card-status status-${p.status}">${statusLabel(p.status)}</span>${topPickBadge}</div>`;
+    const loc = p.location || {};
+    const locText = [loc.district, loc.city, loc.country].filter(Boolean).map(escapeHTML).join(', ');
+    const thesis = p.investmentThesis ? `<p class="wi-card-thesis">${escapeHTML(p.investmentThesis)}</p>` : '';
+    const header = `<div class="wi-card-headblock"><h3 class="wi-card-name">${escapeHTML(p.name)}</h3>${locText ? `<div class="wi-card-loc">📍 ${locText}</div>` : ''}${thesis}</div>`;
+    const priceFromVal = (p.priceRange && p.priceRange.min != null) ? `${t.card_from} ${fmtMoney(p.priceRange.min, p.priceRange.currency)}` : '';
+    let keyBlock = ''; const d = p.delivery || {};
+    if (d.type === 'phased' && Array.isArray(d.phases) && d.phases.length) {
+        const steps = d.phases.map((ph, i) => `<div class="wi-step ${i === 0 ? 'is-current' : ''}"><span class="wi-step-dot"></span><span class="wi-step-name">${escapeHTML(ph.name)}</span><span class="wi-step-date">${escapeHTML(ph.date)}</span></div>`).join('<span class="wi-step-line"></span>');
+        keyBlock = `<div class="wi-card-keyrow phased"><div class="wi-key-label">📅 ${t.card_delivery}</div><div class="wi-stepper">${steps}</div>${priceFromVal ? `<div class="wi-key-price ${isSold ? 'is-dimmed' : ''}">💰 ${priceFromVal}</div>` : ''}</div>`;
+    } else {
+        const deliveryVal = d.date ? escapeHTML(d.date) : '';
+        keyBlock = `<div class="wi-card-keyrow">${deliveryVal ? `<div class="wi-key-cell"><div class="wi-key-label">📅 ${t.card_delivery}</div><div class="wi-key-big">${deliveryVal}</div></div>` : ''}${priceFromVal ? `<div class="wi-key-cell"><div class="wi-key-label">💰 ${t.card_price}</div><div class="wi-key-big ${isSold ? 'is-dimmed' : ''}">${fmtMoney(p.priceRange.min, p.priceRange.currency)}</div></div>` : ''}</div>`;
+    }
+    let unitsBlock = '';
+    if (Array.isArray(p.units) && p.units.length) {
+        const rows = p.units.map(u => `<div class="wi-unit-row"><span class="wi-unit-type">${escapeHTML(u.type)}</span><span class="wi-unit-count">${u.count != null ? `${u.count} ${t.card_units}` : ''}</span><span class="wi-unit-price">${u.priceFrom != null ? `${t.card_from} ${fmtMoney(u.priceFrom, (p.priceRange||{}).currency)}` : ''}</span></div>`).join('');
+        unitsBlock = `<div class="wi-card-section"><div class="wi-section-title">${t.card_units_pricing}</div><div class="wi-unit-list">${rows}</div></div>`;
+    }
+    let progressBlock = ''; const cp = p.constructionProgress;
+    if (cp && cp.photoUrl) {
+        const pct = cp.percent != null ? cp.percent : 0;
+        progressBlock = `<div class="wi-card-section wi-progress" data-block="progress"><div class="wi-section-title">${t.card_progress}</div><div class="wi-progress-photo"><img src="${escapeHTML(cp.photoUrl)}" alt="${t.card_progress}" onerror="var b=this.closest('[data-block=progress]'); if(b) b.style.display='none'"></div><div class="wi-progress-meta"><span class="wi-progress-status">${escapeHTML(cp.statusText || '')}</span><span class="wi-progress-pct">${pct}% ${t.card_completed}</span></div><div class="wi-progress-bar"><span style="width:${Math.max(0, Math.min(100, pct))}%"></span></div></div>`;
+    }
+    let descBlock = '';
+    if (p.description || (Array.isArray(p.highlights) && p.highlights.length)) {
+        const desc = p.description ? `<p class="wi-card-desc">${escapeHTML(p.description)}</p>` : '';
+        const tags = (Array.isArray(p.highlights) && p.highlights.length) ? `<div class="wi-card-tags">${p.highlights.map(h => `<span class="wi-tag">${escapeHTML(h)}</span>`).join('')}</div>` : '';
+        descBlock = `<div class="wi-card-section">${desc}${tags}</div>`;
+    }
+    const forecast = (ip.priceForecast && ip.priceForecast.growthPercent != null) ? `<span class="wi-ip-up">+${ip.priceForecast.growthPercent}%</span> / ${ip.priceForecast.periodYears} ${t.card_years}` : '';
+    const yieldV = ip.rentalYield != null ? `${ip.rentalYield}%` : '';
+    const riskV = ip.riskLevel ? `<span class="wi-pill ${riskTone(ip.riskLevel)}">${t['risk_' + ip.riskLevel.toLowerCase()] || ip.riskLevel}</span>` : '';
+    const liqV = ip.liquidityScore != null ? `${ip.liquidityScore}/100` : '';
+    const resaleV = ip.resaleTime ? escapeHTML(ip.resaleTime) : '';
+    const demandV = ip.demandAfterKeys ? `<span class="wi-pill ${demandTone(ip.demandAfterKeys)}">${t['demand_' + ip.demandAfterKeys.toLowerCase()] || ip.demandAfterKeys}</span>` : '';
+    const devStatus = ip.developerStatus ? `<span class="wi-dev-status status-${ip.developerStatus.toLowerCase()}">${escapeHTML(ip.developerStatus)}</span>` : '';
+    let profileBlock = '';
+    if (Object.keys(ip).length) {
+        profileBlock = `<div class="wi-ip-block ${topPick ? 'is-toppick' : ''}"><div class="wi-ip-header">${t.card_profile_title}</div><div class="wi-ip-top"><div class="wi-ip-score">${ip.investmentScore != null ? `<span class="wi-ip-score-num">${ip.investmentScore}</span><span class="wi-ip-score-max">/100</span>` : ''}<span class="wi-ip-score-label">${t.card_score}</span></div><div class="wi-ip-dev">${ip.developer ? `<span class="wi-ip-dev-name">${escapeHTML(ip.developer)}</span>` : ''}${devStatus}</div></div><div class="wi-ip-rows">${profileRow(t.card_forecast, forecast)}${profileRow(t.card_yield, yieldV)}${profileRow(t.card_risk, riskV)}${profileRow(t.card_liquidity, liqV)}${profileRow(t.card_resale, resaleV)}${profileRow(t.card_demand, demandV)}</div></div>`;
+    }
+    const compared = comparedIds.has(p.id);
+    const cta = `<div class="wi-card-cta-row"><a class="wi-card-btn primary" href="${escapeHTML(p.ctaUrl || '#')}">${t.card_view_details}</a><button class="wi-card-btn ghost ${compared ? 'is-active' : ''}" onclick="toggleCompare('${escapeHTML(p.id)}', this)">${compared ? '✓ ' + t.card_compared : '+ ' + t.card_compare}</button></div>`;
+    return cover + `<div class="wi-card-scrollbody">` + header + keyBlock + unitsBlock + progressBlock + descBlock + profileBlock + cta + `</div>`;
+}
+function toggleCompare(id, btn) {
+    const t = translations[currentMapLang];
+    if (comparedIds.has(id)) { comparedIds.delete(id); btn.classList.remove('is-active'); btn.textContent = '+ ' + t.card_compare; }
+    else { comparedIds.add(id); btn.classList.add('is-active'); btn.textContent = '✓ ' + t.card_compared; }
+}
+function renderProjectMarkers() {
+    projectMarkers.forEach(m => m.marker.remove()); projectMarkers.length = 0;
+    projects.forEach(p => {
+        const wrap = document.createElement('div'); wrap.className = 'wi-marker-wrap'; wrap.dataset.id = p.id;
+        if (p.status !== 'sold_out') { const pulse = document.createElement('div'); pulse.className = `wi-pulse status-${p.status}`; wrap.appendChild(pulse); }
+        const circle = document.createElement('div'); circle.className = `wi-marker status-${p.status}`; circle.innerHTML = projectIconSVG(p.status); wrap.appendChild(circle);
+        wrap.addEventListener('click', (e) => { e.stopPropagation(); openDetailPanel(p, wrap); });
+        const marker = new mapboxgl.Marker({ element: wrap, anchor: 'center', subpixelPositioning: true }).setLngLat(p.coordinates).addTo(map);
+        projectMarkers.push({ marker, status: p.status, wrap, id: p.id });
+    });
+    applyProjectVisibility();
+    if (activeProjectId) {
+        const rec = projectMarkers.find(m => m.id === activeProjectId);
+        if (rec && rec.wrap.style.visibility !== 'hidden') { rec.wrap.classList.add('is-active'); activeMarkerWrap = rec.wrap; } else { closeDetailPanel(); }
+    }
+}
+function toggleProjectStatus(status, isVisible) {
+    projectMarkers.forEach(({ status: s, wrap, id }) => {
+        if (s !== status) return;
+        if (isVisible) { wrap.style.visibility = 'visible'; wrap.style.pointerEvents = 'auto'; }
+        else { wrap.style.visibility = 'hidden'; wrap.style.pointerEvents = 'none'; if (id === activeProjectId) closeDetailPanel(); }
+    });
+}
+function applyProjectVisibility() {
+    ['construction', 'presale', 'ready', 'sold_out'].forEach(status => { const cb = document.getElementById(`layer-projects-${status}`); if (cb) toggleProjectStatus(status, cb.checked); });
+}
+let activeProjectId = null; let activeMarkerWrap = null; let panelEls = null;
+function ensureDetailPanel() {
+    if (panelEls) return panelEls;
+    const root = document.getElementById('mapbox-panama-container');
+    const backdrop = document.createElement('div'); backdrop.className = 'wi-panel-backdrop'; backdrop.addEventListener('click', closeDetailPanel);
+    const panel = document.createElement('div'); panel.className = 'wi-detail-panel';
+    panel.innerHTML = `<div class="wi-panel-grabber" aria-hidden="true"></div><button class="wi-panel-close" aria-label="Close">&times;</button><div class="wi-panel-content"></div>`;
+    root.appendChild(backdrop); root.appendChild(panel);
+    panel.querySelector('.wi-panel-close').addEventListener('click', closeDetailPanel); setupSheetDrag(panel);
+    panelEls = { panel, backdrop, content: panel.querySelector('.wi-panel-content') }; return panelEls;
+}
+function openDetailPanel(p, wrap) {
+    const els = ensureDetailPanel(); els.content.innerHTML = renderProjectCard(p); els.content.scrollTop = 0; els.panel.style.transform = '';
+    requestAnimationFrame(() => { els.panel.classList.add('is-open'); els.backdrop.classList.add('is-open'); });
+    if (activeMarkerWrap) activeMarkerWrap.classList.remove('is-active');
+    if (wrap) { wrap.classList.add('is-active'); activeMarkerWrap = wrap; }
+    activeProjectId = p.id;
+}
+function closeDetailPanel() {
+    if (!panelEls) return;
+    panelEls.panel.classList.remove('is-open'); panelEls.backdrop.classList.remove('is-open'); panelEls.panel.style.transform = '';
+    if (activeMarkerWrap) activeMarkerWrap.classList.remove('is-active'); activeMarkerWrap = null; activeProjectId = null;
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDetailPanel(); });
+function setupSheetDrag(panel) {
+    const grabber = panel.querySelector('.wi-panel-grabber');
+    let startY = 0, dy = 0, dragging = false;
+    const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+    const onDown = (e) => { if (!isMobile()) return; dragging = true; dy = 0; startY = (e.touches ? e.touches[0].clientY : e.clientY); panel.style.transition = 'none'; };
+    const onMove = (e) => { if (!dragging) return; const y = (e.touches ? e.touches[0].clientY : e.clientY); dy = Math.max(0, y - startY); panel.style.transform = `translateY(${dy}px)`; };
+    const onUp = () => { if (!dragging) return; dragging = false; panel.style.transition = ''; if (dy > 90) closeDetailPanel(); else panel.style.transform = ''; };
+    grabber.addEventListener('touchstart', onDown, { passive: true }); grabber.addEventListener('mousedown', onDown);
+    window.addEventListener('touchmove', onMove, { passive: true }); window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchend', onUp); window.addEventListener('mouseup', onUp);
+}
+function setupMapLayersAndEvents() {
+    if (!map.getSource('mapbox-global-streets')) { map.addSource('mapbox-global-streets', { type: 'vector', url: 'mapbox://mapbox.mapbox-streets-v8' }); }
+    const layersToCheck = [
+        { id: 'education', src: 'poi_label', filter: ['match', ['get', 'maki'], ['education', 'school', 'college', 'university'], true, false], type: 'point' },
+        { id: 'medicine', src: 'poi_label', filter: ['match', ['get', 'maki'], ['hospital'], true, false], type: 'point' },
+        { id: 'foodstores', src: 'poi_label', filter: ['match', ['get', 'maki'], ['grocery', 'shop', 'supermarket'], true, false], type: 'point' },
+        { id: 'motorways', src: 'road', filter: ['match', ['get', 'class'], ['motorway', 'trunk'], true, false], type: 'line' },
+        { id: 'traffic', src: 'road', filter: ['match', ['get', 'class'], ['primary', 'secondary'], true, false], type: 'line' },
+        { id: 'airports', src: 'airport_label', filter: ['has', 'maki'], type: 'point' },
+        { id: 'waterways', src: 'waterway', filter: ['has', 'class'], type: 'line' },
+        { id: 'parks', src: 'landuse', filter: ['match', ['get', 'class'], ['park', 'national_park', 'nature_reserve'], true, false], type: 'polygon' }
+    ];
+    layersToCheck.forEach(l => { const cb = document.getElementById(`layer-${l.id}`); if (cb && cb.checked) toggleIndependentLayer(l.id, l.src, l.filter, l.type, true, true); });
+    const hs = document.getElementById('layer-hillshade'); if (hs && hs.checked) toggleDynamicHillshade(true);
+}
+function handleMapClick(e) {
+    const interactiveLayers = ['global-runtime-airports', 'global-runtime-education', 'global-runtime-medicine'];
+    const activeLayers = interactiveLayers.filter(id => map.getLayer(id));
+    if (!activeLayers.length) return;
+    const features = map.queryRenderedFeatures(e.point, { layers: activeLayers });
+    if (!features.length) { currentPopup.remove(); return; }
+    const f = features[0];
+    const objectName = f.properties.name || f.properties.name_en || 'Infrastructure Object';
+    let typeLabel = 'Infrastructure';
+    if (f.layer.id.includes('airports')) typeLabel = translations[currentMapLang]['popup_airport'];
+    if (f.layer.id.includes('education')) typeLabel = translations[currentMapLang]['popup_education'];
+    if (f.layer.id.includes('medicine')) typeLabel = translations[currentMapLang]['popup_medicine'];
+    currentPopup.setLngLat(f.geometry.coordinates).setHTML(`<div class="popup-inner"><span class="popup-type">${typeLabel}</span><h4 class="popup-title">${objectName}</h4></div>`).addTo(map);
+}
+function handleMouseMove(e) {
+    const interactiveLayers = ['global-runtime-airports', 'global-runtime-education', 'global-runtime-medicine'];
+    const activeLayers = interactiveLayers.filter(id => map.getLayer(id));
+    if (!activeLayers.length) return;
+    const features = map.queryRenderedFeatures(e.point, { layers: activeLayers });
+    map.getCanvas().style.cursor = features.length ? 'pointer' : '';
+}
+map.on('load', () => {
+    initMapLocalization(); setupMapLayersAndEvents(); loadProjects();
+    map.on('click', handleMapClick); map.on('mousemove', handleMouseMove);
+    const mapEl = document.getElementById('mapbox-panama-container');
+    const doResize = () => map.resize();
+    [100, 300, 700, 1500, 3000].forEach(t => setTimeout(doResize, t));
+    if (window.ResizeObserver) { try { new ResizeObserver(doResize).observe(mapEl); } catch (e) {} }
+    window.addEventListener('resize', doResize);
+});
+map.on('style.load', () => { setupMapLayersAndEvents(); renderProjectMarkers(); });
+function switchMapStyle() {
+    currentPopup.remove(); const btnText = document.getElementById('wi-style-text');
+    if (activeStyleType === 'light') { activeStyleType = 'satellite'; map.setStyle(styleUrls.satellite, { diff: false }); btnText.setAttribute('data-i18n', 'style_light'); btnText.innerText = translations[currentMapLang]['style_light']; }
+    else { activeStyleType = 'light'; map.setStyle(styleUrls.light, { diff: false }); btnText.setAttribute('data-i18n', 'style_sat'); btnText.innerText = translations[currentMapLang]['style_sat']; }
+}
+function toggleIndependentLayer(customLayerId, sourceLayer, filterExpression, geometryType, isVisible, forceRebuild = false) {
+    const runtimeLayerId = `global-runtime-${customLayerId}`;
+    if (!isVisible) { if (map.getLayer(runtimeLayerId)) map.removeLayer(runtimeLayerId); if (currentPopup.isOpen() && mapContainer.dataset.activeLayer === runtimeLayerId) currentPopup.remove(); return; }
+    if (map.getLayer(runtimeLayerId) && !forceRebuild) return;
+    if (map.getLayer(runtimeLayerId) && forceRebuild) map.removeLayer(runtimeLayerId);
+    let layerColor = '#38bdf8';
+    if (customLayerId === 'motorways' || customLayerId === 'traffic' || customLayerId === 'airports') layerColor = '#fbbf24';
+    if (customLayerId === 'parks') layerColor = '#34d399';
+    if (customLayerId === 'foodstores') layerColor = '#c084fc';
+    if (customLayerId === 'waterways') layerColor = '#00d2ff';
+    let layerType = 'line'; let paintConfig = {};
+    if (geometryType === 'point') {
+        layerType = 'circle';
+        paintConfig = { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, customLayerId === 'airports' ? 7 : 5, 12, customLayerId === 'airports' ? 12 : 9, 16, customLayerId === 'airports' ? 16 : 14], 'circle-color': layerColor, 'circle-stroke-width': 2.5, 'circle-stroke-color': '#ffffff', 'circle-opacity': 0.95 };
+    } else if (geometryType === 'polygon') {
+        layerType = 'fill'; paintConfig = { 'fill-color': layerColor, 'fill-opacity': 0.35, 'fill-outline-color': '#22c55e' };
+    } else {
+        paintConfig = { 'line-width': customLayerId === 'waterways' ? 4 : 3, 'line-color': layerColor, 'line-opacity': customLayerId === 'waterways' ? 0.95 : 0.85 };
+    }
+    if (map.getSource('mapbox-global-streets')) {
+        map.addLayer({ 'id': runtimeLayerId, 'type': layerType, 'source': 'mapbox-global-streets', 'source-layer': sourceLayer, 'filter': filterExpression, 'paint': paintConfig });
+        map.on('click', runtimeLayerId, () => { mapContainer.dataset.activeLayer = runtimeLayerId; });
+    }
+}
+function toggleDynamicHillshade(isVisible) {
+    const layerId = 'runtime-hillshade'; const sourceId = 'runtime-hillshade-source';
+    if (!isVisible) { if (map.getLayer(layerId)) map.removeLayer(layerId); if (map.getSource(sourceId)) map.removeSource(sourceId); return; }
+    if (map.getLayer(layerId)) return;
+    map.addSource(sourceId, { 'type': 'raster-dem', 'url': 'mapbox://mapbox.mapbox-terrain-dem-v1', 'tileSize': 512 });
+    map.addLayer({ 'id': layerId, 'type': 'hillshade', 'source': sourceId, 'paint': { 'hillshade-shadow-color': '#000000', 'hillshade-exaggeration': 0.6 } });
+}
+mapContainer.addEventListener('mousedown', (e) => { e.stopPropagation(); map.scrollZoom.enable(); mapContainer.classList.add('is-active'); });
+document.addEventListener('mousedown', (e) => { if (!mapContainer.contains(e.target)) { map.scrollZoom.disable(); mapContainer.classList.remove('is-active'); } });
+</script>
+
+<style>
+.wi-map-wrapper.dark-theme { display: flex; width: 100%; height: 100vh; min-height: 480px; position: relative; background: #0b0d10; box-sizing: border-box; overflow: hidden; font-family: 'Georgia', serif; }
+.wi-map-wrapper.dark-theme * { box-sizing: border-box; }
+.wi-map-wrapper.dark-theme .wi-map-sidebar { width: 380px; height: 100%; background: rgba(15,18,22,0.98); z-index: 10; display: flex; flex-direction: column; padding: 40px 30px; box-sizing: border-box; color: #fff; flex-shrink: 0; border-right: 1px solid rgba(255,255,255,0.08); overflow-y: auto; }
+.wi-map-wrapper.dark-theme .wi-sidebar-header h2 { font-size: 24px; color: #fff; margin: 0 0 6px 0; font-weight: 700; font-family: 'Georgia', serif; }
+.wi-sidebar-tag { color: #C9A84C; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; display: block; font-family: 'Arial', sans-serif; }
+.wi-map-wrapper.dark-theme .wi-sidebar-header p { color: #888aa0; font-size: 13px; margin: 0 0 30px 0; line-height: 1.4; }
+.wi-filter-group { margin-bottom: 25px; }
+.wi-filter-label { color: #66667a; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: block; font-family: 'Arial', sans-serif; }
+.wi-checkbox-list { display: flex; flex-direction: column; gap: 12px; }
+.wi-checkbox-item { display: flex; align-items: center; gap: 12px; color: #ccc; font-size: 14px; cursor: pointer; font-family: 'Arial', sans-serif; }
+.wi-checkbox-item input { width: 17px; height: 17px; accent-color: #C9A84C; cursor: pointer; }
+.dot-indicator { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.blue-dot { background: #38bdf8; box-shadow: 0 0 8px #38bdf8; }
+.gold-dot { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+.green-dot { background: #34d399; box-shadow: 0 0 8px #34d399; }
+.purple-dot { background: #c084fc; box-shadow: 0 0 8px #c084fc; }
+.cyan-dot { background: #00d2ff; box-shadow: 0 0 8px #00d2ff; }
+.grey-dot { background: #8a8f99; box-shadow: 0 0 8px #8a8f99; }
+.wi-sidebar-footer { margin-top: auto; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px; }
+.wi-stats { font-size: 13px; color: #aaa; font-family: 'Arial', sans-serif; }
+#mapbox-panama-container { flex: 1; height: 100%; position: relative; outline: none; }
+.wi-map-btn { position: absolute; top: 10px; right: 50px; z-index: 15; display: flex; align-items: center; gap: 8px; padding: 0 14px; height: 29px; background: #fff; color: #333; border: 1px solid rgba(0,0,0,0.15); border-radius: 4px; font-family: system-ui, sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.1); transition: background 0.2s; }
+.wi-map-btn:hover { background: #f4f4f5; }
+.wi-map-btn svg { display: block; flex-shrink: 0; color: #555; }
+.wi-custom-popup .mapboxgl-popup-content { background: #fff; color: #0f172a; border-radius: 6px; padding: 10px 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.12); font-family: system-ui, sans-serif; border: 1px solid rgba(0,0,0,0.06); }
+.wi-custom-popup .mapboxgl-popup-tip { border-top-color: #fff; }
+.popup-inner { display: flex; flex-direction: column; gap: 2px; }
+.popup-type { font-size: 9px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }
+.popup-title { font-size: 13px; font-weight: 600; margin: 0; color: #0f172a; line-height: 1.2; }
+.wi-marker-wrap { width: 40px; height: 40px; position: relative; cursor: pointer; transition: none; animation: none; }
+.wi-pulse { position: absolute; top: 0; left: 0; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #C9A84C; animation: wi-pulse 2.5s ease-out infinite; pointer-events: none; }
+.wi-pulse.status-ready { border-color: #34d399; }
+.wi-pulse.status-presale { border-color: #38bdf8; }
+@keyframes wi-pulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.4); opacity: 0; } }
+.wi-marker { position: absolute; top: 0; left: 0; width: 40px; height: 40px; border-radius: 50%; background: #0d0d0d; border: 2px solid #C9A84C; display: flex; align-items: center; justify-content: center; transition: transform 0.18s; box-shadow: 0 2px 12px rgba(0,0,0,0.5); }
+.wi-marker.status-ready { border-color: #34d399; }
+.wi-marker.status-presale { border-color: #38bdf8; }
+.wi-marker.status-sold_out { border-color: #8a8f99; opacity: 0.85; }
+.wi-marker-wrap:hover .wi-marker { transform: scale(1.18); }
+.wi-marker svg { width: 18px; height: 18px; pointer-events: none; }
+.wi-marker-wrap.is-active .wi-marker { transform: scale(1.2); border-width: 3px; box-shadow: 0 0 0 4px rgba(201,168,76,0.25), 0 4px 16px rgba(0,0,0,0.6); }
+.wi-detail-panel { position: absolute; top: 0; right: 0; height: 100%; width: 384px; max-width: 92%; background: #121417; border-left: 1px solid rgba(201,168,76,0.35); box-shadow: -18px 0 50px rgba(0,0,0,0.55); z-index: 20; transform: translateX(105%); transition: transform .34s cubic-bezier(.22,.61,.36,1); display: flex; flex-direction: column; font-family: 'Georgia', serif; }
+.wi-detail-panel.is-open { transform: translateX(0); }
+.wi-panel-grabber { display: none; }
+.wi-panel-close { position: absolute; top: 10px; right: 12px; z-index: 6; width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(10,10,12,0.55); backdrop-filter: blur(4px); color: #fff; font-size: 22px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .18s; }
+.wi-panel-close:hover { background: rgba(201,168,76,0.9); color: #1a1408; }
+.wi-panel-content { overflow-y: auto; flex: 1; min-height: 0; }
+.wi-panel-backdrop { display: none; }
+.wi-card-cover { position: relative; width: 100%; height: 190px; background: linear-gradient(135deg,#16181c,#1d2025); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.wi-card-cover-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.wi-card-cover-img.is-failed { display: none; }
+.wi-card-cover-fallback { opacity: 0.16; }
+.wi-card-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, transparent 32%, transparent 58%, rgba(0,0,0,0.5) 100%); pointer-events: none; }
+.wi-card-status { position: absolute; top: 12px; left: 12px; z-index: 3; display: inline-block; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; font-family: 'Arial', sans-serif; font-weight: 700; padding: 4px 11px; border-radius: 13px; backdrop-filter: blur(3px); }
+.wi-card-status.status-construction { background: rgba(201,168,76,0.88); color: #1a1408; }
+.wi-card-status.status-ready { background: rgba(52,211,153,0.9); color: #06281c; }
+.wi-card-status.status-presale { background: rgba(56,189,248,0.9); color: #04212e; }
+.wi-card-status.status-sold_out { background: rgba(90,95,104,0.92); color: #e7e9ec; }
+.wi-card-toppick { position: absolute; top: 12px; right: 12px; z-index: 3; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; font-family: 'Arial', sans-serif; font-weight: 700; padding: 4px 10px; border-radius: 13px; background: linear-gradient(135deg,#C9A84C,#9a7a30); color: #1a1408; box-shadow: 0 2px 10px rgba(201,168,76,0.5); }
+.wi-card-scrollbody { padding: 16px 18px 22px; }
+.wi-card-name { font-size: 21px; color: #f0e8d0; font-weight: 400; margin: 0 0 4px; line-height: 1.2; font-family: 'Georgia', serif; }
+.wi-card-loc { font-size: 12px; color: #8a8f99; font-family: 'Arial', sans-serif; margin-bottom: 12px; }
+.wi-card-thesis { font-style: italic; font-family: 'Georgia', serif; color: #C9A84C; font-size: 13.5px; line-height: 1.45; margin: 0; border-left: 2px solid rgba(201,168,76,0.5); padding-left: 11px; }
+.wi-card-keyrow { display: flex; gap: 14px; margin: 16px 0; padding: 12px 14px; background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.16); border-radius: 9px; }
+.wi-card-keyrow.phased { flex-direction: column; align-items: stretch; gap: 8px; }
+.wi-key-cell { flex: 1; }
+.wi-key-label { font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; color: #7a7363; font-family: 'Arial', sans-serif; margin-bottom: 4px; }
+.wi-key-big { font-size: 18px; color: #e9dcb6; font-family: 'Georgia', serif; font-weight: 400; }
+.wi-key-big.is-dimmed, .wi-key-price.is-dimmed { color: #6a6f78; text-decoration: line-through; opacity: 0.75; }
+.wi-key-price { font-size: 14px; color: #e9dcb6; font-family: 'Georgia', serif; }
+.wi-stepper { display: flex; align-items: flex-start; margin: 4px 0; }
+.wi-step { display: flex; flex-direction: column; align-items: center; text-align: center; flex: 0 0 auto; min-width: 60px; gap: 4px; }
+.wi-step-dot { width: 11px; height: 11px; border-radius: 50%; border: 2px solid #5a5446; background: #1a1c20; }
+.wi-step.is-current .wi-step-dot { border-color: #C9A84C; background: #C9A84C; box-shadow: 0 0 8px rgba(201,168,76,0.6); }
+.wi-step-name { font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.5px; color: #8a8f99; font-family: 'Arial', sans-serif; }
+.wi-step.is-current .wi-step-name { color: #C9A84C; }
+.wi-step-date { font-size: 11px; color: #d4c49a; font-family: 'Arial', sans-serif; }
+.wi-step-line { flex: 1 1 auto; height: 2px; background: linear-gradient(90deg,#C9A84C,#4a4438); margin-top: 5px; min-width: 8px; }
+.wi-card-section { margin: 18px 0; }
+.wi-section-title { font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: #7a7363; font-family: 'Arial', sans-serif; font-weight: 700; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid rgba(201,168,76,0.12); }
+.wi-unit-list { display: flex; flex-direction: column; gap: 7px; }
+.wi-unit-row { display: flex; align-items: baseline; gap: 8px; font-family: 'Arial', sans-serif; font-size: 12.5px; }
+.wi-unit-type { color: #e9dcb6; font-weight: 600; min-width: 66px; }
+.wi-unit-count { color: #8a8f99; flex: 1; }
+.wi-unit-price { color: #d4c49a; font-weight: 500; white-space: nowrap; }
+.wi-progress-photo { width: 100%; height: 142px; border-radius: 8px; overflow: hidden; background: #16181c; margin-bottom: 10px; }
+.wi-progress-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wi-progress-meta { display: flex; justify-content: space-between; font-family: 'Arial', sans-serif; font-size: 12px; margin-bottom: 8px; }
+.wi-progress-status { color: #d4c49a; }
+.wi-progress-pct { color: #C9A84C; font-weight: 700; }
+.wi-progress-bar { height: 6px; border-radius: 4px; background: rgba(255,255,255,0.07); overflow: hidden; }
+.wi-progress-bar span { display: block; height: 100%; background: linear-gradient(90deg,#9a7a30,#C9A84C); border-radius: 4px; }
+.wi-card-desc { font-size: 13px; line-height: 1.55; color: #b9b0a0; font-family: 'Georgia', serif; margin: 0 0 12px; }
+.wi-card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.wi-tag { font-size: 10px; font-family: 'Arial', sans-serif; color: #d4c49a; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.22); padding: 4px 9px; border-radius: 20px; letter-spacing: 0.3px; }
+.wi-ip-block { margin: 20px 0 6px; padding: 16px; border-radius: 12px; background: linear-gradient(160deg, rgba(201,168,76,0.10), rgba(201,168,76,0.03)); border: 1px solid rgba(201,168,76,0.45); position: relative; }
+.wi-ip-block.is-toppick { border-color: #C9A84C; box-shadow: 0 0 0 1px rgba(201,168,76,0.35), 0 0 26px rgba(201,168,76,0.28); }
+.wi-ip-header { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; font-family: 'Arial', sans-serif; font-weight: 700; color: #C9A84C; margin-bottom: 14px; }
+.wi-ip-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid rgba(201,168,76,0.18); }
+.wi-ip-score { display: flex; align-items: baseline; gap: 3px; flex-wrap: wrap; }
+.wi-ip-score-num { font-size: 34px; font-family: 'Georgia', serif; font-weight: 700; color: #C9A84C; line-height: 1; }
+.wi-ip-score-max { font-size: 14px; color: #8a8470; }
+.wi-ip-score-label { width: 100%; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #8a8470; font-family: 'Arial', sans-serif; margin-top: 4px; }
+.wi-ip-dev { text-align: right; flex-shrink: 0; }
+.wi-ip-dev-name { display: block; font-size: 12px; color: #e9dcb6; font-family: 'Arial', sans-serif; margin-bottom: 6px; }
+.wi-dev-status { display: inline-block; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; font-family: 'Arial', sans-serif; font-weight: 700; padding: 3px 9px; border-radius: 11px; }
+.wi-dev-status.status-platinum { background: linear-gradient(135deg,#e7e6e3,#b6b3aa); color: #2a2a2a; }
+.wi-dev-status.status-gold { background: linear-gradient(135deg,#C9A84C,#9a7a30); color: #1a1408; }
+.wi-dev-status.status-silver { background: linear-gradient(135deg,#d2d5d9,#9aa0a6); color: #22262b; }
+.wi-ip-rows { display: flex; flex-direction: column; gap: 9px; }
+.wi-ip-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.wi-ip-row-label { font-size: 11px; color: #9a9384; font-family: 'Arial', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; }
+.wi-ip-row-value { font-size: 13px; color: #e9dcb6; font-family: 'Arial', sans-serif; font-weight: 600; text-align: right; }
+.wi-ip-up { color: #34d399; font-weight: 700; }
+.wi-pill { display: inline-block; font-size: 10px; font-weight: 700; font-family: 'Arial', sans-serif; padding: 3px 9px; border-radius: 11px; letter-spacing: 0.4px; }
+.wi-pill.good { background: rgba(52,211,153,0.14); color: #34d399; border: 1px solid rgba(52,211,153,0.4); }
+.wi-pill.warn { background: rgba(201,168,76,0.16); color: #e0bd5e; border: 1px solid rgba(201,168,76,0.4); }
+.wi-pill.bad { background: rgba(248,113,113,0.14); color: #f87171; border: 1px solid rgba(248,113,113,0.45); }
+.wi-pill.muted { background: rgba(138,143,153,0.14); color: #a7adb6; border: 1px solid rgba(138,143,153,0.4); }
+.wi-card-cta-row { display: flex; gap: 10px; margin: 20px 0 4px; }
+.wi-card-btn { flex: 1; text-align: center; padding: 11px 8px; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; font-family: 'Arial', sans-serif; font-weight: 600; border-radius: 7px; cursor: pointer; transition: all .18s; text-decoration: none; }
+.wi-card-btn.primary { background: linear-gradient(135deg,#C9A84C,#9a7a30); color: #1a1408; border: 1px solid #C9A84C; }
+.wi-card-btn.primary:hover { filter: brightness(1.08); }
+.wi-card-btn.ghost { background: transparent; color: #C9A84C; border: 1px solid rgba(201,168,76,0.45); }
+.wi-card-btn.ghost:hover { background: rgba(201,168,76,0.12); }
+.wi-card-btn.ghost.is-active { background: rgba(201,168,76,0.18); color: #e9dcb6; border-color: #C9A84C; }
+@media (prefers-reduced-motion: reduce) { .wi-detail-panel { transition: none; } .wi-pulse { animation: none; } }
+@media (max-width: 768px) {
+    .wi-map-wrapper.dark-theme { flex-direction: column; height: 100vh; }
+    .wi-map-wrapper.dark-theme .wi-map-sidebar { width: 100%; height: auto; padding: 25px 20px; }
+    #mapbox-panama-container { width: 100%; flex: 1; min-height: 320px; }
+    .wi-map-btn { top: auto; bottom: 20px; right: 10px; }
+    .wi-detail-panel { top: auto; bottom: 0; left: 0; right: 0; width: 100%; max-width: 100%; height: auto; max-height: 92%; border-left: none; border-top: 1px solid rgba(201,168,76,0.4); border-radius: 16px 16px 0 0; transform: translateY(100%); box-shadow: 0 -16px 40px rgba(0,0,0,0.55); }
+    .wi-detail-panel.is-open { transform: translateY(0); }
+    .wi-panel-grabber { display: block; width: 42px; height: 4px; border-radius: 3px; background: rgba(255,255,255,0.28); margin: 9px auto 2px; cursor: grab; flex: 0 0 auto; touch-action: none; }
+    .wi-panel-close { top: 8px; }
+    .wi-panel-backdrop { display: block; position: absolute; inset: 0; background: rgba(0,0,0,0.45); opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 19; }
+    .wi-panel-backdrop.is-open { opacity: 1; pointer-events: auto; }
+}
+</style>
+
+</body>
+</html>
