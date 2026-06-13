@@ -160,6 +160,8 @@ const comparedIds = new Set();
 const SUPABASE_URL = 'https://vidqebjgbzafabdocogu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_GOowu5FveA_RwlmvgGLlSg_Twf_VdVz';
 let projects = [];
+const PROJECT_STATUSES = ['construction', 'presale', 'ready', 'sold_out'];
+const visibleStatuses = new Set(PROJECT_STATUSES);
 
 function mapRow(r) {
     return {
@@ -192,9 +194,7 @@ async function loadProjects() {
     renderProjectMarkers();
 }
 
-const projectMarkers = [];
 function statusColor(s) { if (s === 'ready') return '#34d399'; if (s === 'presale') return '#38bdf8'; if (s === 'sold_out') return '#8a8f99'; return '#C9A84C'; }
-function projectIconSVG(s) { return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 21V9L12 3L21 9V21H15V15H9V21H3Z" fill="${statusColor(s)}" fill-opacity="0.95"/></svg>`; }
 function statusLabel(s) { const t = translations[currentMapLang]; if (s === 'construction') return t.status_construction; if (s === 'presale') return t.status_presale; if (s === 'sold_out') return t.status_sold_out; return t.status_ready; }
 function escapeHTML(str) { return String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 function fmtMoney(n, c) { if (n == null) return ''; const num = Number(n).toLocaleString('en-US'); return (c && c !== 'USD') ? `${num} ${c}` : `$${num}`; }
@@ -257,33 +257,67 @@ function toggleCompare(id, btn) {
     if (comparedIds.has(id)) { comparedIds.delete(id); btn.classList.remove('is-active'); btn.textContent = '+ ' + t.card_compare; }
     else { comparedIds.add(id); btn.classList.add('is-active'); btn.textContent = '✓ ' + t.card_compared; }
 }
+
+/* ===== Объекты как НАТИВНЫЕ слои карты (не уезжают при зуме) ===== */
+function pinStrokeColor() { return ['match', ['get', 'status'], 'ready', '#34d399', 'presale', '#38bdf8', 'sold_out', '#8a8f99', '#C9A84C']; }
+function buildPinImage(status) {
+    const size = 42, dpr = 2, px = size * dpr;
+    const canvas = document.createElement('canvas'); canvas.width = px; canvas.height = px;
+    const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+    const c = size / 2, r = size / 2 - 3;
+    ctx.beginPath(); ctx.arc(c, c, r, 0, Math.PI * 2); ctx.fillStyle = '#0d0d0d'; ctx.fill();
+    ctx.lineWidth = 2.5; ctx.strokeStyle = statusColor(status); ctx.stroke();
+    const icon = size * 0.46, off = (size - icon) / 2, sc = icon / 24;
+    ctx.save(); ctx.translate(off, off); ctx.scale(sc, sc);
+    ctx.fillStyle = statusColor(status); ctx.fill(new Path2D('M3 21V9L12 3L21 9V21H15V15H9V21H3Z')); ctx.restore();
+    return ctx.getImageData(0, 0, px, px);
+}
+function ensurePinImages() {
+    PROJECT_STATUSES.forEach(st => { const id = 'wi-pin-' + st; if (!map.hasImage(id)) { try { map.addImage(id, buildPinImage(st), { pixelRatio: 2 }); } catch (e) {} } });
+}
+function projectsGeoJSON() {
+    return { type: 'FeatureCollection', features: projects
+        .filter(p => p && Array.isArray(p.coordinates) && isFinite(p.coordinates[0]) && isFinite(p.coordinates[1]))
+        .map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [Number(p.coordinates[0]), Number(p.coordinates[1])] }, properties: { id: String(p.id), status: p.status || 'construction', name: p.name || '' } })) };
+}
+function statusFilter() { return ['in', ['get', 'status'], ['literal', Array.from(visibleStatuses)]]; }
+function activeFilter() { return ['==', ['get', 'id'], activeProjectId == null ? '__none__' : String(activeProjectId)]; }
 function renderProjectMarkers() {
-    projectMarkers.forEach(m => m.marker.remove()); projectMarkers.length = 0;
-    projects.forEach(p => {
-        const wrap = document.createElement('div'); wrap.className = 'wi-marker-wrap'; wrap.dataset.id = p.id;
-        if (p.status !== 'sold_out') { const pulse = document.createElement('div'); pulse.className = `wi-pulse status-${p.status}`; wrap.appendChild(pulse); }
-        const circle = document.createElement('div'); circle.className = `wi-marker status-${p.status}`; circle.innerHTML = projectIconSVG(p.status); wrap.appendChild(circle);
-        wrap.addEventListener('click', (e) => { e.stopPropagation(); openDetailPanel(p, wrap); });
-        const marker = new mapboxgl.Marker({ element: wrap, anchor: 'center', subpixelPositioning: true }).setLngLat(p.coordinates).addTo(map);
-        projectMarkers.push({ marker, status: p.status, wrap, id: p.id });
-    });
+    if (!map.isStyleLoaded()) return;
+    ensurePinImages();
+    const data = projectsGeoJSON();
+    if (map.getSource('wi-projects')) { map.getSource('wi-projects').setData(data); }
+    else { map.addSource('wi-projects', { type: 'geojson', data: data }); }
+    if (!map.getLayer('wi-projects-active')) {
+        map.addLayer({ id: 'wi-projects-active', type: 'circle', source: 'wi-projects', filter: activeFilter(),
+            paint: { 'circle-radius': 24, 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-width': 3, 'circle-stroke-color': pinStrokeColor(), 'circle-stroke-opacity': 0.5 } });
+    } else { map.setFilter('wi-projects-active', activeFilter()); }
+    if (!map.getLayer('wi-projects-pins')) {
+        map.addLayer({ id: 'wi-projects-pins', type: 'symbol', source: 'wi-projects', filter: statusFilter(),
+            layout: { 'icon-image': ['concat', 'wi-pin-', ['get', 'status']], 'icon-size': 1, 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
+    } else { map.setFilter('wi-projects-pins', statusFilter()); }
     applyProjectVisibility();
-    if (activeProjectId) {
-        const rec = projectMarkers.find(m => m.id === activeProjectId);
-        if (rec && rec.wrap.style.visibility !== 'hidden') { rec.wrap.classList.add('is-active'); activeMarkerWrap = rec.wrap; } else { closeDetailPanel(); }
-    }
 }
 function toggleProjectStatus(status, isVisible) {
-    projectMarkers.forEach(({ status: s, wrap, id }) => {
-        if (s !== status) return;
-        if (isVisible) { wrap.style.visibility = 'visible'; wrap.style.pointerEvents = 'auto'; }
-        else { wrap.style.visibility = 'hidden'; wrap.style.pointerEvents = 'none'; if (id === activeProjectId) closeDetailPanel(); }
-    });
+    if (isVisible) visibleStatuses.add(status); else visibleStatuses.delete(status);
+    if (map.getLayer('wi-projects-pins')) map.setFilter('wi-projects-pins', statusFilter());
+    if (!isVisible && activeProjectId != null) {
+        const ap = projects.find(p => String(p.id) === String(activeProjectId));
+        if (ap && ap.status === status) closeDetailPanel();
+    }
 }
 function applyProjectVisibility() {
-    ['construction', 'presale', 'ready', 'sold_out'].forEach(status => { const cb = document.getElementById(`layer-projects-${status}`); if (cb) toggleProjectStatus(status, cb.checked); });
+    PROJECT_STATUSES.forEach(status => { const cb = document.getElementById('layer-projects-' + status); if (cb) { if (cb.checked) visibleStatuses.add(status); else visibleStatuses.delete(status); } });
+    if (map.getLayer('wi-projects-pins')) map.setFilter('wi-projects-pins', statusFilter());
 }
-let activeProjectId = null; let activeMarkerWrap = null; let panelEls = null;
+function onPinClick(e) {
+    if (!e.features || !e.features.length) return;
+    const id = e.features[0].properties.id;
+    const p = projects.find(x => String(x.id) === String(id));
+    if (p) openDetailPanel(p);
+}
+
+let activeProjectId = null; let panelEls = null;
 function ensureDetailPanel() {
     if (panelEls) return panelEls;
     const root = document.getElementById('mapbox-panama-container');
@@ -294,17 +328,16 @@ function ensureDetailPanel() {
     panel.querySelector('.wi-panel-close').addEventListener('click', closeDetailPanel); setupSheetDrag(panel);
     panelEls = { panel, backdrop, content: panel.querySelector('.wi-panel-content') }; return panelEls;
 }
-function openDetailPanel(p, wrap) {
+function updateActivePin() { if (map.getLayer('wi-projects-active')) map.setFilter('wi-projects-active', activeFilter()); }
+function openDetailPanel(p) {
     const els = ensureDetailPanel(); els.content.innerHTML = renderProjectCard(p); els.content.scrollTop = 0; els.panel.style.transform = '';
     requestAnimationFrame(() => { els.panel.classList.add('is-open'); els.backdrop.classList.add('is-open'); });
-    if (activeMarkerWrap) activeMarkerWrap.classList.remove('is-active');
-    if (wrap) { wrap.classList.add('is-active'); activeMarkerWrap = wrap; }
-    activeProjectId = p.id;
+    activeProjectId = p.id; updateActivePin();
 }
 function closeDetailPanel() {
     if (!panelEls) return;
     panelEls.panel.classList.remove('is-open'); panelEls.backdrop.classList.remove('is-open'); panelEls.panel.style.transform = '';
-    if (activeMarkerWrap) activeMarkerWrap.classList.remove('is-active'); activeMarkerWrap = null; activeProjectId = null;
+    activeProjectId = null; updateActivePin();
 }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDetailPanel(); });
 function setupSheetDrag(panel) {
@@ -357,6 +390,9 @@ function handleMouseMove(e) {
 map.on('load', () => {
     initMapLocalization(); setupMapLayersAndEvents(); loadProjects();
     map.on('click', handleMapClick); map.on('mousemove', handleMouseMove);
+    map.on('click', 'wi-projects-pins', onPinClick);
+    map.on('mouseenter', 'wi-projects-pins', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'wi-projects-pins', () => { map.getCanvas().style.cursor = ''; });
     const mapEl = document.getElementById('mapbox-panama-container');
     const doResize = () => map.resize();
     [100, 300, 700, 1500, 3000].forEach(t => setTimeout(doResize, t));
@@ -434,18 +470,6 @@ document.addEventListener('mousedown', (e) => { if (!mapContainer.contains(e.tar
 .popup-inner { display: flex; flex-direction: column; gap: 2px; }
 .popup-type { font-size: 9px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }
 .popup-title { font-size: 13px; font-weight: 600; margin: 0; color: #0f172a; line-height: 1.2; }
-.wi-marker-wrap { width: 40px; height: 40px; position: relative; cursor: pointer; transition: none; animation: none; }
-.wi-pulse { position: absolute; top: 0; left: 0; width: 40px; height: 40px; border-radius: 50%; border: 1px solid #C9A84C; animation: wi-pulse 2.5s ease-out infinite; pointer-events: none; }
-.wi-pulse.status-ready { border-color: #34d399; }
-.wi-pulse.status-presale { border-color: #38bdf8; }
-@keyframes wi-pulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.4); opacity: 0; } }
-.wi-marker { position: absolute; top: 0; left: 0; width: 40px; height: 40px; border-radius: 50%; background: #0d0d0d; border: 2px solid #C9A84C; display: flex; align-items: center; justify-content: center; transition: transform 0.18s; box-shadow: 0 2px 12px rgba(0,0,0,0.5); }
-.wi-marker.status-ready { border-color: #34d399; }
-.wi-marker.status-presale { border-color: #38bdf8; }
-.wi-marker.status-sold_out { border-color: #8a8f99; opacity: 0.85; }
-.wi-marker-wrap:hover .wi-marker { transform: scale(1.18); }
-.wi-marker svg { width: 18px; height: 18px; pointer-events: none; }
-.wi-marker-wrap.is-active .wi-marker { transform: scale(1.2); border-width: 3px; box-shadow: 0 0 0 4px rgba(201,168,76,0.25), 0 4px 16px rgba(0,0,0,0.6); }
 .wi-detail-panel { position: absolute; top: 0; right: 0; height: 100%; width: 384px; max-width: 92%; background: #121417; border-left: 1px solid rgba(201,168,76,0.35); box-shadow: -18px 0 50px rgba(0,0,0,0.55); z-index: 20; transform: translateX(105%); transition: transform .34s cubic-bezier(.22,.61,.36,1); display: flex; flex-direction: column; font-family: 'Georgia', serif; }
 .wi-detail-panel.is-open { transform: translateX(0); }
 .wi-panel-grabber { display: none; }
@@ -531,7 +555,7 @@ document.addEventListener('mousedown', (e) => { if (!mapContainer.contains(e.tar
 .wi-card-btn.ghost { background: transparent; color: #C9A84C; border: 1px solid rgba(201,168,76,0.45); }
 .wi-card-btn.ghost:hover { background: rgba(201,168,76,0.12); }
 .wi-card-btn.ghost.is-active { background: rgba(201,168,76,0.18); color: #e9dcb6; border-color: #C9A84C; }
-@media (prefers-reduced-motion: reduce) { .wi-detail-panel { transition: none; } .wi-pulse { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .wi-detail-panel { transition: none; } }
 @media (max-width: 768px) {
     .wi-map-wrapper.dark-theme { flex-direction: column; height: 100vh; }
     .wi-map-wrapper.dark-theme .wi-map-sidebar { width: 100%; height: auto; padding: 25px 20px; }
