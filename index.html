@@ -474,11 +474,50 @@ function switchMapStyle() {
     if (activeStyleType === 'light') { activeStyleType = 'satellite'; map.setStyle(styleUrls.satellite, { diff: false }); btnText.setAttribute('data-i18n', 'style_light'); btnText.innerText = L()['style_light']; }
     else { activeStyleType = 'light'; map.setStyle(styleUrls.light, { diff: false }); btnText.setAttribute('data-i18n', 'style_sat'); btnText.innerText = L()['style_sat']; }
 }
+const POI_ICON_LAYERS = ['education', 'medicine', 'foodstores'];
+function buildPinShapeImage(kind) {
+    const colors = { education: '#38bdf8', medicine: '#ef4444', foodstores: '#c084fc' };
+    const color = colors[kind] || '#38bdf8';
+    const W = 40, H = 48, dpr = 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    const pin = new Path2D('M20,4 C11,4 5,11 5,19 C5,30 20,46 20,46 C20,46 35,30 35,19 C35,11 29,4 20,4 Z');
+    ctx.fillStyle = color; ctx.fill(pin);
+    ctx.lineWidth = 2; ctx.strokeStyle = '#ffffff'; ctx.stroke(pin);
+    ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#ffffff';
+    if (kind === 'medicine') {
+        ctx.fillRect(17, 9, 6, 16);
+        ctx.fillRect(13, 13, 14, 6);
+    } else if (kind === 'foodstores') {
+        ctx.fillRect(13, 15, 14, 12);
+        ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(16, 15); ctx.quadraticCurveTo(16, 10, 20, 10); ctx.quadraticCurveTo(24, 10, 24, 15); ctx.stroke();
+    } else {
+        ctx.beginPath(); ctx.moveTo(20, 9); ctx.lineTo(29, 14); ctx.lineTo(20, 19); ctx.lineTo(11, 14); ctx.closePath(); ctx.fill();
+        ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(14, 17); ctx.quadraticCurveTo(20, 22.5, 26, 17); ctx.stroke();
+        ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(29, 14); ctx.lineTo(30, 21); ctx.stroke();
+        ctx.beginPath(); ctx.arc(30, 21.5, 1.4, 0, Math.PI * 2); ctx.fill();
+    }
+    return ctx.getImageData(0, 0, W * dpr, H * dpr);
+}
+function ensurePoiIcons() {
+    POI_ICON_LAYERS.forEach(k => { const id = 'wi-poi-' + k; if (!map.hasImage(id)) { try { map.addImage(id, buildPinShapeImage(k), { pixelRatio: 2 }); } catch (e) {} } });
+}
 function toggleIndependentLayer(customLayerId, sourceLayer, filterExpression, geometryType, isVisible, forceRebuild = false) {
     const runtimeLayerId = `global-runtime-${customLayerId}`;
     if (!isVisible) { if (map.getLayer(runtimeLayerId)) map.removeLayer(runtimeLayerId); if (currentPopup.isOpen() && mapContainer.dataset.activeLayer === runtimeLayerId) currentPopup.remove(); return; }
     if (map.getLayer(runtimeLayerId) && !forceRebuild) return;
     if (map.getLayer(runtimeLayerId) && forceRebuild) map.removeLayer(runtimeLayerId);
+    if (POI_ICON_LAYERS.indexOf(customLayerId) !== -1) {
+        ensurePoiIcons();
+        if (map.getSource('mapbox-global-streets')) {
+            map.addLayer({ 'id': runtimeLayerId, 'type': 'symbol', 'source': 'mapbox-global-streets', 'source-layer': sourceLayer, 'filter': filterExpression,
+                'layout': { 'icon-image': 'wi-poi-' + customLayerId, 'icon-size': ['interpolate', ['linear'], ['zoom'], 9, 0.5, 13, 0.75, 16, 0.95], 'icon-anchor': 'bottom', 'icon-allow-overlap': false, 'icon-ignore-placement': false } });
+            map.on('click', runtimeLayerId, () => { mapContainer.dataset.activeLayer = runtimeLayerId; });
+        }
+        return;
+    }
     let layerColor = '#38bdf8';
     if (customLayerId === 'motorways' || customLayerId === 'traffic' || customLayerId === 'airports') layerColor = '#fbbf24';
     if (customLayerId === 'parks') layerColor = '#34d399';
