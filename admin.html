@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhiteIndex — Админ-панель</title>
+<style>html,body{margin:0;padding:0;height:100%;background:#0b0d10}</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+#wi-admin {
+    --bg:#0b0d10; --panel:#121417; --panel2:#16191e; --line:rgba(201,168,76,.18);
+    --line2:rgba(255,255,255,.07); --gold:#C9A84C; --gold-d:#9a7a30;
+    --cream:#f0e8d0; --txt:#d7cfbe; --muted:#8a8f99; --muted2:#6f7682;
+    --good:#34d399; --bad:#f87171; --info:#38bdf8;
+    --r:9px; --serif:Georgia,'Times New Roman',serif; --sans:Arial,Helvetica,sans-serif;
+  }
+  #wi-admin * {box-sizing:border-box}
+  #wi-admin {margin:0;position:relative;min-height:100vh;overflow:visible;background:var(--bg);color:var(--txt);font-family:var(--sans);font-size:14px}
+  #wi-admin a {color:var(--gold)}
+  #wi-admin h1, #wi-admin h2, #wi-admin h3 {font-family:var(--serif);font-weight:400;color:var(--cream)}
+  #wi-admin .eyebrow {font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);font-weight:700}
+
+  
+  #wi-admin #login {min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  #wi-admin .login-card {width:100%;max-width:360px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:30px 26px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  #wi-admin .brand {font-family:var(--serif);font-size:22px;color:var(--gold);margin:0 0 2px}
+  #wi-admin .brand small {display:block;font-family:var(--sans);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-top:4px}
+  #wi-admin .login-card h2 {font-size:16px;margin:22px 0 16px}
+  #wi-admin label.fld {display:block;margin-bottom:14px}
+  #wi-admin label.fld .lbl {display:block;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  #wi-admin input, #wi-admin select, #wi-admin textarea {width:100%;background:var(--panel2);border:1px solid var(--line2);border-radius:7px;color:var(--cream);font-family:var(--sans);font-size:14px;padding:10px 11px;outline:none}
+  #wi-admin input:focus, #wi-admin select:focus, #wi-admin textarea:focus {border-color:var(--gold)}
+  #wi-admin textarea {resize:vertical;min-height:64px;line-height:1.5}
+  #wi-admin .btn {display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:11px 16px;border-radius:7px;transition:filter .15s,background .15s,border-color .15s}
+  #wi-admin .btn.primary {background:linear-gradient(135deg,var(--gold),var(--gold-d));color:#1a1408}
+  #wi-admin .btn.primary:hover {filter:brightness(1.08)}
+  #wi-admin .btn.ghost {background:transparent;color:var(--gold);border:1px solid var(--line)}
+  #wi-admin .btn.ghost:hover {background:rgba(201,168,76,.1)}
+  #wi-admin .btn.danger {background:transparent;color:var(--bad);border:1px solid rgba(248,113,113,.4)}
+  #wi-admin .btn.danger:hover {background:rgba(248,113,113,.12)}
+  #wi-admin .btn.block {width:100%}
+  #wi-admin .msg {font-size:12.5px;padding:9px 11px;border-radius:7px;margin-top:12px;display:none}
+  #wi-admin .msg.err {display:block;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);color:#fda4a4}
+  #wi-admin .msg.ok {display:block;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.35);color:#86efac}
+
+  
+  #wi-admin #app {display:none;min-height:100vh;flex-direction:column}
+  #wi-admin .topbar {display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+  #wi-admin .topbar .brand {font-size:18px}
+  #wi-admin .topbar .who {font-size:12px;color:var(--muted);margin-right:12px}
+  #wi-admin .layout {display:flex;flex:1;min-height:0}
+  #wi-admin .sidebar {width:300px;flex:0 0 300px;border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column}
+  #wi-admin .sidebar-head {display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line2)}
+  #wi-admin .sidebar-head .eyebrow {margin:0}
+  #wi-admin .plist {overflow-y:auto;flex:1}
+  #wi-admin .pitem {display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line2);cursor:pointer}
+  #wi-admin .pitem:hover {background:var(--panel2)}
+  #wi-admin .pitem.active {background:rgba(201,168,76,.1);box-shadow:inset 3px 0 0 var(--gold)}
+  #wi-admin .pitem .nm {flex:1;color:var(--cream);font-size:13px}
+  #wi-admin .pitem .sub {font-size:11px;color:var(--muted2)}
+  #wi-admin .dot {width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  #wi-admin .dot.construction {background:var(--gold)} #wi-admin .dot.presale {background:var(--info)}
+  #wi-admin .dot.ready {background:var(--good)} #wi-admin .dot.sold_out {background:#8a8f99}
+  #wi-admin .unpub {font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted2);border:1px solid var(--line2);border-radius:10px;padding:1px 6px}
+
+  #wi-admin .editor {flex:1;overflow:visible;padding:22px 26px 60px}
+  #wi-admin .editor .empty {color:var(--muted);max-width:420px;margin:60px auto;text-align:center;line-height:1.6}
+  #wi-admin .form-head {display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:6px}
+  #wi-admin .form-head h2 {margin:0;font-size:20px}
+  #wi-admin .section {margin-top:22px}
+  #wi-admin .section > .eyebrow {display:block;padding-bottom:7px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+  #wi-admin .grid {display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  #wi-admin .grid.three {grid-template-columns:1fr 1fr 1fr}
+  #wi-admin .span2 {grid-column:1 / -1}
+  #wi-admin .hint {font-size:11px;color:var(--muted2);margin-top:5px;line-height:1.45}
+
+  #wi-admin .rows {display:flex;flex-direction:column;gap:8px}
+  #wi-admin .row-line {display:flex;gap:8px;align-items:center}
+  #wi-admin .row-line input {flex:1}
+  #wi-admin .row-line .x {flex:0 0 auto;width:34px;height:38px;border:1px solid var(--line2);background:var(--panel2);color:var(--muted);border-radius:7px;cursor:pointer;font-size:16px}
+  #wi-admin .row-line .x:hover {color:var(--bad);border-color:rgba(248,113,113,.4)}
+  #wi-admin .add-row {align-self:flex-start;margin-top:2px;background:transparent;border:1px dashed var(--line);color:var(--gold);font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:7px 12px;border-radius:7px;cursor:pointer}
+  #wi-admin .add-row:hover {background:rgba(201,168,76,.08)}
+
+  #wi-admin .imgfield {display:flex;gap:8px;align-items:stretch}
+  #wi-admin .imgfield input {flex:1}
+  #wi-admin .thumb {width:54px;height:38px;border-radius:6px;object-fit:cover;border:1px solid var(--line2);background:var(--panel2);display:none}
+  #wi-admin .thumb.show {display:block}
+
+  #wi-admin .check {display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+  #wi-admin .check input {width:auto}
+  #wi-admin .actionbar {position:static;margin-top:26px;padding:14px 0 4px;background:linear-gradient(180deg,transparent,var(--bg) 40%);display:flex;gap:10px}
+  #wi-admin .spacer {flex:1}
+  #wi-admin .toast {position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:#1c1f25;border:1px solid var(--line);color:var(--cream);padding:11px 18px;border-radius:9px;font-size:13px;transition:all .25s;pointer-events:none;z-index:50}
+  #wi-admin .toast.show {opacity:1;transform:translateX(-50%) translateY(0)}
+  #wi-admin .toast.err {border-color:rgba(248,113,113,.5)}
+
+  #wi-admin .mi-list {display:flex;flex-direction:column;gap:8px}
+  #wi-admin .mi-row {display:flex;gap:8px;align-items:center}
+  #wi-admin .mi-row .mi-url {flex:1}
+  #wi-admin .mi-bar {display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  #wi-admin .chips {display:flex;flex-wrap:wrap;gap:8px}
+  #wi-admin .chip {background:var(--panel2);border:1px solid var(--line2);color:var(--txt);border-radius:20px;padding:8px 14px;font-size:12px;cursor:pointer;font-family:var(--sans)}
+  #wi-admin .chip.active {background:rgba(201,168,76,.16);border-color:var(--gold);color:var(--cream)}
+  @media (max-width:820px){
+    #wi-admin .layout {flex-direction:column}
+    #wi-admin .sidebar {width:100%;flex:0 0 auto;max-height:38vh}
+    #wi-admin .grid, #wi-admin .grid.three {grid-template-columns:1fr}
+  }
+</style>
+<div id="wi-admin">
+<!-- ===================== LOGIN ===================== -->
+<div id="login">
+  <div class="login-card">
+    <div class="brand">WhiteIndex<small>Админ-панель каталога</small></div>
+    <h2>Вход</h2>
+    <label class="fld"><span class="lbl">Email</span><input id="email" type="email" autocomplete="username" placeholder="you@example.com"></label>
+    <label class="fld"><span class="lbl">Пароль</span><input id="password" type="password" autocomplete="current-password" placeholder="••••••••"></label>
+    <button class="btn primary block" id="loginBtn">Войти</button>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app">
+  <div class="topbar">
+    <div class="brand" style="font-size:18px">WhiteIndex<small>Каталог объектов</small></div>
+    <div style="display:flex;align-items:center">
+      <span class="who" id="who"></span>
+      <button class="btn ghost" id="logoutBtn">Выйти</button>
+    </div>
+  </div>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <span class="eyebrow">Объекты</span>
+        <button class="btn primary" id="newBtn" style="padding:7px 12px">+ Новый</button>
+      </div>
+      <div class="plist" id="plist"></div>
+    </aside>
+    <main class="editor" id="editor">
+      <div class="empty">Выберите объект слева, чтобы отредактировать, или нажмите «+ Новый», чтобы добавить в каталог.</div>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+<script>
+
+/* ===== Конфигурация (те же значения, что в виджете) ===== */
+const SUPABASE_URL = 'https://vidqebjgbzafabdocogu.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_GOowu5FveA_RwlmvgGLlSg_Twf_VdVz';
+const BUCKET = 'project-images';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+const $ = id => document.getElementById(id);
+const el = (tag, cls, html) => { const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; };
+let projectsCache = [];
+let currentId = null;
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(text, isErr){
+  const t=$('toast'); t.textContent=text; t.className='toast show'+(isErr?' err':'');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.className='toast',2600);
+}
+
+/* ---------- Auth ---------- */
+async function init(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session) showApp(session); else showLogin();
+}
+function showLogin(){ $('login').style.display='flex'; $('app').style.display='none'; }
+async function showApp(session){
+  $('login').style.display='none'; $('app').style.display='flex';
+  $('who').textContent = session?.user?.email || '';
+  await loadProjects();
+}
+$('loginBtn').addEventListener('click', doLogin);
+$('password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+async function doLogin(){
+  const email=$('email').value.trim(), password=$('password').value;
+  const m=$('loginMsg'); m.className='msg';
+  if(!email||!password){ m.className='msg err'; m.textContent='Введите email и пароль.'; return; }
+  $('loginBtn').disabled=true; $('loginBtn').textContent='Вход…';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  $('loginBtn').disabled=false; $('loginBtn').textContent='Войти';
+  if(error){ m.className='msg err'; m.textContent='Не удалось войти: '+error.message; return; }
+  showApp(data.session);
+}
+$('logoutBtn').addEventListener('click', async ()=>{ await sb.auth.signOut(); currentId=null; showLogin(); });
+
+/* ---------- Список проектов ---------- */
+async function loadProjects(){
+  const { data, error } = await sb.from('projects').select('*').order('sort_order',{ascending:true});
+  if(error){ toast('Ошибка загрузки: '+error.message, true); return; }
+  projectsCache = data || [];
+  renderList();
+}
+function renderList(){
+  const list=$('plist'); list.innerHTML='';
+  if(!projectsCache.length){ list.appendChild(el('div','pitem','<span class="sub">Пока пусто. Нажмите «+ Новый».</span>')); return; }
+  projectsCache.forEach(p=>{
+    const item=el('div','pitem'+(p.id===currentId?' active':''));
+    item.innerHTML = `<span class="dot ${p.status}"></span><span class="nm">${escapeHtml(p.name||'(без названия)')}<div class="sub">${escapeHtml([p.district,p.city].filter(Boolean).join(', '))}</div></span>${p.is_published?'':'<span class="unpub">скрыт</span>'}`;
+    item.addEventListener('click', ()=>{ currentId=p.id; renderList(); openEditor(p); });
+    list.appendChild(item);
+  });
+}
+function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ---------- Конструкторы повторяемых строк ---------- */
+function unitRow(u={}){
+  const r=el('div','row-line');
+  r.innerHTML=`<input data-k="type" placeholder="Тип (1 BR, Studio…)" value="${escapeHtml(u.type||'')}">
+    <input data-k="count" type="number" placeholder="Кол-во" value="${u.count??''}" style="max-width:90px">
+    <input data-k="priceFrom" type="number" placeholder="Цена от" value="${u.priceFrom??''}" style="max-width:120px">
+    <button class="x" title="Удалить">×</button>`;
+  r.querySelector('.x').addEventListener('click',()=>r.remove());
+  return r;
+}
+function phaseRow(ph={}){
+  const r=el('div','row-line');
+  r.innerHTML=`<input data-k="name" placeholder="Название (Phase 1)" value="${escapeHtml(ph.name||'')}">
+    <input data-k="date" placeholder="Срок (Q4 2027)" value="${escapeHtml(ph.date||'')}">
+    <button class="x" title="Удалить">×</button>`;
+  r.querySelector('.x').addEventListener('click',()=>r.remove());
+  return r;
+}
+function readRows(container, keys){
+  return [...container.querySelectorAll('.row-line')].map(r=>{
+    const o={}; keys.forEach(k=>{ const inp=r.querySelector(`[data-k="${k}"]`); let v=inp.value.trim(); if(inp.type==='number') v = v===''?null:Number(v); o[k]= v===''?null:v; }); return o;
+  }).filter(o=>Object.values(o).some(v=>v!==null && v!==''));
+}
+
+/* ---------- Загрузка изображения ---------- */
+async function uploadImage(file, targetInput){
+  if(!file) return;
+  toast('Загрузка изображения…');
+  const safe = file.name.toLowerCase().replace(/[^a-z0-9.\-_]+/g,'-');
+  const path = `${currentId||'new'}/${Date.now()}-${safe}`;
+  const { error } = await sb.storage.from(BUCKET).upload(path, file, { upsert:true, cacheControl:'3600' });
+  if(error){ toast('Ошибка загрузки: '+error.message, true); return; }
+  const { data } = sb.storage.from(BUCKET).getPublicUrl(path);
+  targetInput.value = data.publicUrl;
+  targetInput.dispatchEvent(new Event('input'));
+  toast('Изображение загружено');
+}
+function imageField(id, value){
+  const wrap=el('div');
+  wrap.innerHTML=`<div class="imgfield">
+      <img class="thumb ${value?'show':''}" id="${id}_thumb" src="${value?escapeHtml(value):''}">
+      <input id="${id}" placeholder="https://…/image.jpg" value="${escapeHtml(value||'')}">
+      <button class="btn ghost" id="${id}_btn" style="padding:0 12px">Загрузить</button>
+      <input type="file" id="${id}_file" accept="image/*" style="display:none">
+    </div>
+    <div class="hint">Вставьте ссылку или загрузите файл — он сохранится в Supabase Storage, ссылка подставится автоматически.</div>`;
+  setTimeout(()=>{
+    const inp=$(id), btn=$(id+'_btn'), file=$(id+'_file'), thumb=$(id+'_thumb');
+    btn.addEventListener('click',()=>file.click());
+    file.addEventListener('change',e=>uploadImage(e.target.files[0], inp));
+    inp.addEventListener('input',()=>{ if(inp.value){ thumb.src=inp.value; thumb.classList.add('show'); } else thumb.classList.remove('show'); });
+  },0);
+  return wrap;
+}
+
+/* ---------- Авто-ID ---------- */
+function genId(name){
+  var base=(name||'obj').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'obj';
+  return base+'-'+Math.random().toString(36).slice(2,7);
+}
+/* ---------- Разбор координат ---------- */
+function parseCoords(str){
+  if(!str) return null;
+  str=String(str).trim();
+  var m;
+  m=str.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/); if(m) return {lat:+m[1],lng:+m[2]};
+  m=str.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/); if(m) return {lat:+m[1],lng:+m[2]};
+  m=str.match(/[?&](?:q|query|ll|sll|center|destination)=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/); if(m) return {lat:+m[1],lng:+m[2]};
+  m=str.match(/^\s*(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)\s*$/); if(m) return {lat:+m[1],lng:+m[2]};
+  return null;
+}
+/* ---------- Загрузка фото с возвратом ссылки ---------- */
+async function uploadImageReturn(file){
+  if(!file) return null;
+  toast('Загрузка изображения…');
+  var safe=file.name.toLowerCase().replace(/[^a-z0-9.\-_]+/g,'-');
+  var path=(currentId||'new')+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,6)+'-'+safe;
+  var up=await sb.storage.from(BUCKET).upload(path,file,{upsert:true,cacheControl:'3600'});
+  if(up.error){ toast('Ошибка загрузки: '+up.error.message, true); return null; }
+  var pub=sb.storage.from(BUCKET).getPublicUrl(path);
+  toast('Изображение загружено');
+  return pub.data.publicUrl;
+}
+/* ---------- Галерея изображений (до 8) ---------- */
+function multiImageField(id, urls){
+  urls=Array.isArray(urls)?urls.slice():(urls?[urls]:[]);
+  var wrap=el('div'); wrap.className='multi-img';
+  var listEl=el('div','mi-list'); listEl.id=id+'_list'; wrap.appendChild(listEl);
+  function addRow(url){
+    if(listEl.children.length>=8){ toast('Не больше 8 фото в блоке', true); return; }
+    var r=el('div','mi-row');
+    r.innerHTML='<img class="thumb '+(url?'show':'')+'" src="'+(url?escapeHtml(url):'')+'"><input class="mi-url" placeholder="https://…/image.jpg" value="'+escapeHtml(url||'')+'"><button class="x" title="Удалить" type="button">×</button>';
+    var img=r.querySelector('img'), inp=r.querySelector('.mi-url'), x=r.querySelector('.x');
+    inp.addEventListener('input',function(){ if(inp.value){ img.src=inp.value; img.classList.add('show'); } else img.classList.remove('show'); });
+    x.addEventListener('click',function(){ r.remove(); });
+    listEl.appendChild(r);
+  }
+  urls.forEach(function(u){ addRow(u); });
+  var bar=el('div','mi-bar');
+  var addUrl=el('button','add-row','+ ссылка'); addUrl.type='button'; addUrl.addEventListener('click',function(){ addRow(''); });
+  var upBtn=el('button','add-row','+ загрузить фото'); upBtn.type='button';
+  var fileInp=el('input'); fileInp.type='file'; fileInp.accept='image/*'; fileInp.multiple=true; fileInp.style.display='none';
+  upBtn.addEventListener('click',function(){ fileInp.click(); });
+  fileInp.addEventListener('change', async function(e){
+    var files=[].slice.call(e.target.files);
+    for(var i=0;i<files.length;i++){
+      if(listEl.children.length>=8){ toast('Не больше 8 фото в блоке', true); break; }
+      var url=await uploadImageReturn(files[i]);
+      if(url) addRow(url);
+    }
+    fileInp.value='';
+  });
+  bar.appendChild(addUrl); bar.appendChild(upBtn); bar.appendChild(fileInp);
+  wrap.appendChild(bar);
+  return wrap;
+}
+function readImages(id){
+  var list=$(id+'_list'); if(!list) return [];
+  return [].slice.call(list.querySelectorAll('.mi-url')).map(function(i){ return i.value.trim(); }).filter(Boolean).slice(0,8);
+}
+/* ---------- Форматы инвестирования ---------- */
+function formatsField(selected){
+  var set={}; (Array.isArray(selected)?selected:[]).forEach(function(v){ set[v]=true; });
+  var wrap=el('div','chips'); wrap.id='f_formats';
+  [['kotlovan','Котлованный'],['rental','Для арендного дохода'],['flip','Под перепродажу (flip)']].forEach(function(o){
+    var b=el('button','chip'+(set[o[0]]?' active':''),o[1]); b.type='button'; b.dataset.v=o[0];
+    b.addEventListener('click',function(){ b.classList.toggle('active'); });
+    wrap.appendChild(b);
+  });
+  return wrap;
+}
+function readFormats(){
+  var w=$('f_formats'); if(!w) return [];
+  return [].slice.call(w.querySelectorAll('.chip.active')).map(function(b){ return b.dataset.v; });
+}
+
+/* ---------- Открытие редактора ---------- */
+function openEditor(p){
+  const ip = p.investment_profile||{};
+  const pf = ip.priceForecast||{};
+  const cp = p.construction_progress||{};
+  const dv = p.delivery||{type:'single'};
+  const ed=$('editor'); ed.innerHTML='';
+
+  const head=el('div','form-head');
+  head.innerHTML=`<h2>${p.__isNew?'Новый объект':escapeHtml(p.name||'Объект')}</h2>`;
+  ed.appendChild(head);
+
+  // --- Основное ---
+  ed.appendChild(sectionTitle('Основное'));
+  ed.appendChild(field2(
+    fieldText('f_name','Название', p.name),
+    fieldSelect('f_status','Статус', p.status||'construction', [['construction','Строится'],['presale','Пресейл'],['ready','Готово'],['sold_out','Продано']])
+  ));
+  ed.appendChild(fieldNumber('f_sort','Порядок в списке (sort_order)', p.sort_order??0));
+  ed.appendChild(checkboxField('f_pub','Опубликован (показывать на карте)', p.is_published!==false));
+  ed.appendChild(field3(
+    fieldText('f_district','Район', p.district),
+    fieldText('f_city','Город', p.city),
+    fieldText('f_country','Страна', p.country)
+  ));
+  ed.appendChild(fieldText('f_coords','Координаты', (p.lat!=null&&p.lng!=null)?`${p.lat}, ${p.lng}`:''));
+  ed.appendChild(hintBlock('Вставьте «широта, долгота» (как Google даёт по «Скопировать координаты»), например 8.988, -79.523 — или целиком ссылку Google Maps; координаты определятся автоматически.'));
+  const thesisWrap=el('label','fld'); thesisWrap.innerHTML=`<span class="lbl">Инвест-тезис (короткая строка)</span>`;
+  const thesisInp=el('input'); thesisInp.id='f_thesis'; thesisInp.value=p.investment_thesis||''; thesisWrap.appendChild(thesisInp);
+  ed.appendChild(thesisWrap);
+  const descWrap=el('label','fld'); descWrap.innerHTML=`<span class="lbl">Описание</span>`;
+  const descTa=el('textarea'); descTa.id='f_desc'; descTa.value=p.description||''; descWrap.appendChild(descTa);
+  ed.appendChild(descWrap);
+  ed.appendChild(fieldText('f_cta','Ссылка кнопки «Детали проекта»', p.cta_url));
+
+  // --- Обложка ---
+  ed.appendChild(sectionTitle('Обложка (галерея, до 8 фото)'));
+  const coverWrap=el('label','fld'); coverWrap.innerHTML=`<span class="lbl">Фото обложки</span>`;
+  const coverImgs=(Array.isArray(p.cover_images)&&p.cover_images.length)?p.cover_images:(p.cover_image?[p.cover_image]:[]);
+  coverWrap.appendChild(multiImageField('f_cover', coverImgs));
+  ed.appendChild(coverWrap);
+
+  // --- Цена ---
+  ed.appendChild(sectionTitle('Цена'));
+  ed.appendChild(field3(
+    fieldNumber('f_pmin','Цена от', p.price_min),
+    fieldNumber('f_pmax','Цена до', p.price_max),
+    fieldText('f_cur','Валюта', p.currency||'USD')
+  ));
+
+  // --- Сдача ---
+  ed.appendChild(sectionTitle('Сдача'));
+  ed.appendChild(fieldSelect('f_dtype','Тип сдачи', dv.type||'single', [['single','Единая дата'],['phased','По фазам']]));
+  const single=el('div'); single.id='deliverySingle';
+  single.appendChild(fieldText('f_ddate','Дата сдачи (Q4 2026 / Delivered)', dv.date));
+  ed.appendChild(single);
+  const phased=el('div'); phased.id='deliveryPhased';
+  phased.innerHTML=`<span class="lbl" style="display:block;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Фазы</span>`;
+  const phRows=el('div','rows'); phRows.id='phaseRows';
+  (dv.phases||[]).forEach(ph=>phRows.appendChild(phaseRow(ph)));
+  phased.appendChild(phRows);
+  const addPh=el('button','add-row','+ фаза'); addPh.addEventListener('click',()=>phRows.appendChild(phaseRow())); phased.appendChild(addPh);
+  ed.appendChild(phased);
+  const dtype=$('f_dtype');
+  const syncDelivery=()=>{ const ph = dtype.value==='phased'; single.style.display=ph?'none':''; phased.style.display=ph?'':'none'; };
+  dtype.addEventListener('change',syncDelivery); syncDelivery();
+
+  // --- Юниты ---
+  ed.appendChild(sectionTitle('Юниты и цены'));
+  const uRows=el('div','rows'); uRows.id='unitRows';
+  (p.units||[]).forEach(u=>uRows.appendChild(unitRow(u)));
+  ed.appendChild(uRows);
+  const addU=el('button','add-row','+ тип юнита'); addU.addEventListener('click',()=>uRows.appendChild(unitRow())); ed.appendChild(addU);
+
+  // --- Стройка ---
+  ed.appendChild(sectionTitle('Ход строительства (по желанию)'));
+  ed.appendChild(field2(
+    fieldNumber('f_cpct','Готовность, %', cp.percent),
+    fieldText('f_cstatus','Что сейчас (Structural works…)', cp.statusText)
+  ));
+  const cphotoWrap=el('label','fld'); cphotoWrap.innerHTML=`<span class="lbl">Фото со стройки (галерея, до 8)</span>`;
+  const cPhotos=(Array.isArray(cp.photos)&&cp.photos.length)?cp.photos:(cp.photoUrl?[cp.photoUrl]:[]);
+  cphotoWrap.appendChild(multiImageField('f_cphotos', cPhotos));
+  ed.appendChild(cphotoWrap);
+  ed.appendChild(hintBlock('Блок стройки покажется на карточке, только если загружено хотя бы одно фото.'));
+
+  // --- Хайлайты ---
+  ed.appendChild(sectionTitle('Метки (highlights)'));
+  const hlWrap=el('label','fld'); hlWrap.innerHTML=`<span class="lbl">Список через запятую</span>`;
+  const hlInp=el('input'); hlInp.id='f_highlights'; hlInp.value=(p.highlights||[]).join(', '); hlInp.placeholder='Ocean View, Near Metro, Airbnb Friendly';
+  hlWrap.appendChild(hlInp); ed.appendChild(hlWrap);
+
+  // --- Investment Profile ---
+  ed.appendChild(sectionTitle('Форматы инвестирования'));
+  ed.appendChild(formatsField(p.investment_formats));
+  ed.appendChild(hintBlock('Можно выбрать несколько — они покажутся метками на карточке.'));
+
+  ed.appendChild(sectionTitle('WhiteIndex Investment Profile'));
+  ed.appendChild(field2(
+    fieldText('f_dev','Девелопер', ip.developer),
+    fieldSelect('f_devst','Статус девелопера', ip.developerStatus||'Not rated', [['Not rated','Not rated'],['Platinum','Platinum'],['Gold','Gold'],['Silver','Silver']])
+  ));
+  ed.appendChild(field2(
+    fieldNumber('f_score','Инвест-рейтинг (0–100)', ip.investmentScore),
+    fieldNumber('f_liq','Ликвидность (0–100)', ip.liquidityScore)
+  ));
+  ed.appendChild(sectionTitle('Доходность аренды, % (от–до)'));
+  ed.appendChild(field2(
+    fieldNumber('f_yst_min','Краткосрочная: от', ip.yieldShortMin,'0.1'),
+    fieldNumber('f_yst_max','Краткосрочная: до', ip.yieldShortMax,'0.1')
+  ));
+  ed.appendChild(field2(
+    fieldNumber('f_ylt_min','Долгосрочная: от', ip.yieldLongMin,'0.1'),
+    fieldNumber('f_ylt_max','Долгосрочная: до', ip.yieldLongMax,'0.1')
+  ));
+  ed.appendChild(field3(
+    fieldNumber('f_growth_min','Прогноз роста: от, %', (pf.growthMin!=null?pf.growthMin:pf.growthPercent)),
+    fieldNumber('f_growth_max','Прогноз роста: до, %', pf.growthMax),
+    fieldNumber('f_years','Срок прогноза, лет', pf.periodYears)
+  ));
+  ed.appendChild(fieldText('f_resale','Срок перепродажи', ip.resaleTime));
+  ed.appendChild(field2(
+    fieldSelect('f_risk','Уровень риска', ip.riskLevel||'Low', [['Low','Low'],['Medium','Medium'],['High','High']]),
+    fieldSelect('f_demand','Спрос после сдачи', ip.demandAfterKeys||'High', [['High','High'],['Medium','Medium'],['Low','Low']])
+  ));
+  ed.appendChild(hintBlock('Инвест-рейтинг 85 и выше — объект получает золотую подсветку и бейдж «Top Pick» на карточке.'));
+
+  // --- Кнопки ---
+  const bar=el('div','actionbar');
+  const save=el('button','btn primary','Сохранить'); save.addEventListener('click',()=>saveProject(p.__isNew));
+  bar.appendChild(save);
+  bar.appendChild(el('div','spacer'));
+  if(!p.__isNew){ const del=el('button','btn danger','Удалить'); del.addEventListener('click',()=>deleteProject(p.id)); bar.appendChild(del); }
+  ed.appendChild(bar);
+
+  ed.scrollTop=0;
+}
+
+/* ---------- Хелперы полей ---------- */
+function sectionTitle(t){ const s=el('div','section'); s.appendChild(el('span','eyebrow',t)); return s; }
+function hintBlock(t){ return el('div','hint',t); }
+function fieldText(id,label,val,attr=''){ const w=el('label','fld'); w.innerHTML=`<span class="lbl">${label}</span><input id="${id}" ${attr} value="${escapeHtml(val||'')}">`; return w; }
+function fieldNumber(id,label,val,step){ const w=el('label','fld'); w.innerHTML=`<span class="lbl">${label}</span><input id="${id}" type="number" ${step?`step="${step}"`:''} value="${val??''}">`; return w; }
+function fieldSelect(id,label,val,opts){ const w=el('label','fld'); const o=opts.map(([v,t])=>`<option value="${v}" ${v===val?'selected':''}>${t}</option>`).join(''); w.innerHTML=`<span class="lbl">${label}</span><select id="${id}">${o}</select>`; return w; }
+function checkboxField(id,label,checked){ const w=el('label','fld check'); w.innerHTML=`<input type="checkbox" id="${id}" ${checked?'checked':''}><span>${label}</span>`; return w; }
+function field2(a,b){ const g=el('div','grid'); g.appendChild(a); g.appendChild(b); return g; }
+function field3(a,b,c){ const g=el('div','grid three'); g.appendChild(a); g.appendChild(b); g.appendChild(c); return g; }
+
+/* ---------- Новый объект ---------- */
+$('newBtn').addEventListener('click', ()=>{
+  currentId=null; renderList();
+  openEditor({ __isNew:true, status:'construction', currency:'USD', is_published:true, sort_order:(projectsCache.length?Math.max(...projectsCache.map(p=>p.sort_order||0))+1:1) });
+});
+
+/* ---------- Сохранение ---------- */
+function val(id){ const e=$(id); return e?e.value.trim():''; }
+function numOrNull(id){ const v=val(id); return v===''?null:Number(v); }
+async function saveProject(isNew){
+  if(!val('f_name')){ toast('Укажите название.', true); return; }
+  const coords = parseCoords(val('f_coords'));
+  if(!coords){ toast('Не удалось распознать координаты. Вставьте «широта, долгота» или ссылку Google Maps.', true); return; }
+  const id = isNew ? genId(val('f_name')) : currentId;
+  if(!id){ toast('Не удалось определить объект для сохранения.', true); return; }
+
+  const dtype = val('f_dtype');
+  const delivery = dtype==='phased'
+    ? { type:'phased', date:null, phases: readRows($('phaseRows'),['name','date']) }
+    : { type:'single', date: val('f_ddate')||null, phases:null };
+
+  const cpct=numOrNull('f_cpct'), cstatus=val('f_cstatus'), cphotos=readImages('f_cphotos');
+  const construction_progress = (cphotos.length || cpct!==null || cstatus)
+    ? { percent: cpct, statusText: cstatus||null, photoUrl: cphotos[0]||null, photos: cphotos } : null;
+
+  const highlights = val('f_highlights').split(',').map(s=>s.trim()).filter(Boolean);
+  const coverList = readImages('f_cover');
+  const ystMin=numOrNull('f_yst_min'), ystMax=numOrNull('f_yst_max');
+  const yltMin=numOrNull('f_ylt_min'), yltMax=numOrNull('f_ylt_max');
+  const gMin=numOrNull('f_growth_min'), gMax=numOrNull('f_growth_max');
+
+  const row = {
+    id, sort_order: numOrNull('f_sort')||0, is_published: $('f_pub').checked,
+    name: val('f_name'), status: val('f_status'),
+    district: val('f_district')||null, city: val('f_city')||null, country: val('f_country')||null,
+    lng: coords.lng, lat: coords.lat,
+    cover_image: coverList[0]||null, cover_images: coverList,
+    investment_formats: readFormats(),
+    investment_thesis: val('f_thesis')||null,
+    description: val('f_desc')||null, cta_url: val('f_cta')||null,
+    price_min: numOrNull('f_pmin'), price_max: numOrNull('f_pmax'), currency: val('f_cur')||'USD',
+    delivery, units: readRows($('unitRows'),['type','count','priceFrom']),
+    construction_progress, highlights,
+    investment_profile: {
+      developer: val('f_dev')||null, developerStatus: val('f_devst'),
+      priceForecast: { growthMin: gMin, growthMax: gMax, growthPercent: gMin, periodYears: numOrNull('f_years') },
+      yieldShortMin: ystMin, yieldShortMax: ystMax, yieldLongMin: yltMin, yieldLongMax: yltMax,
+      rentalYield: (yltMin!=null?yltMin:ystMin), riskLevel: val('f_risk'),
+      liquidityScore: numOrNull('f_liq'), resaleTime: val('f_resale')||null,
+      demandAfterKeys: val('f_demand'), investmentScore: numOrNull('f_score')
+    }
+  };
+
+  const { error } = await sb.from('projects').upsert(row);
+  if(error){ toast('Ошибка сохранения: '+error.message, true); return; }
+  toast('Сохранено');
+  currentId=id;
+  await loadProjects();
+  const fresh=projectsCache.find(p=>p.id===id); if(fresh) openEditor(fresh);
+}
+
+/* ---------- Удаление ---------- */
+async function deleteProject(id){
+  if(!confirm('Удалить объект безвозвратно?')) return;
+  const { error } = await sb.from('projects').delete().eq('id',id);
+  if(error){ toast('Ошибка удаления: '+error.message, true); return; }
+  toast('Удалено'); currentId=null;
+  await loadProjects();
+  $('editor').innerHTML='<div class="empty">Объект удалён. Выберите другой или создайте новый.</div>';
+}
+
+init();
+
+</script>
+
+</body>
+</html>
