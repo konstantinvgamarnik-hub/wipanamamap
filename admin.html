@@ -358,6 +358,7 @@ function openEditor(p){
   const head=el('div','form-head');
   head.innerHTML=`<h2>${p.__isNew?'Новый объект':escapeHtml(p.name||'Объект')}</h2>`;
   ed.appendChild(head);
+  if(p.captured_by){ const cb=el('div'); cb.style.cssText='margin:4px 0 12px;font-size:12px;color:#9aa0aa'; cb.textContent='Добавлено представителем: '+p.captured_by; ed.appendChild(cb); }
 
   // --- Основное ---
   ed.appendChild(sectionTitle('Основное'));
