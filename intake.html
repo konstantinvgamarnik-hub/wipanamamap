@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>WhiteIndex — Добавить объект</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#121417; --panel2:#16191e; --line:rgba(201,168,76,.18);
+    --line2:rgba(255,255,255,.09); --gold:#C9A84C; --gold-d:#9a7a30;
+    --cream:#f0e8d0; --txt:#d7cfbe; --muted:#8a8f99; --good:#34d399; --bad:#f87171;
+    --serif:Georgia,'Times New Roman',serif; --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:var(--sans);font-size:16px}
+  a{color:var(--gold)}
+  h1{font-family:var(--serif);font-weight:400}
+  .wrap{max-width:540px;margin:0 auto;padding:18px 16px 90px}
+  .brand{font-family:var(--serif);font-size:22px;color:var(--gold);margin:0}
+  .brand small{display:block;font-family:var(--sans);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:4px}
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:22px}
+  .card{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .card h2{font-family:var(--serif);font-weight:400;font-size:18px;margin:20px 0 16px}
+  label.fld{display:block;margin-bottom:16px}
+  .lbl{display:block;font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+  input,select,textarea{width:100%;background:var(--panel2);border:1px solid var(--line2);border-radius:9px;color:var(--cream);font-family:var(--sans);font-size:16px;padding:13px 13px;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+  textarea{resize:vertical;min-height:90px;line-height:1.5}
+  select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 20px,calc(100% - 13px) 20px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:15px 18px;border-radius:10px}
+  .btn.primary{background:linear-gradient(135deg,var(--gold),var(--gold-d));color:#1a1408}
+  .btn.ghost{background:transparent;color:var(--gold);border:1px solid var(--line)}
+  .btn.block{width:100%}
+  .msg{font-size:13px;padding:10px 12px;border-radius:8px;margin-top:12px;display:none}
+  .msg.err{display:block;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);color:#fda4a4}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+  .who{font-size:12px;color:var(--muted)}
+  .row2{display:flex;gap:10px}.row2>*{flex:1}
+  .coords-row{display:flex;gap:10px;align-items:flex-end}
+  .coords-row .fld{flex:1;margin-bottom:0}
+  .gpsbtn{flex:0 0 auto;white-space:nowrap;padding:13px 14px}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+  .photos{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+  .photo{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;border:1px solid var(--line2);background:var(--panel2)}
+  .photo img{width:100%;height:100%;object-fit:cover;display:block}
+  .photo .x{position:absolute;top:3px;right:3px;width:22px;height:22px;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:14px;line-height:1;cursor:pointer}
+  .addphoto{width:84px;height:84px;border-radius:10px;border:1px dashed var(--line);background:transparent;color:var(--gold);font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .savebar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px;background:linear-gradient(180deg,transparent,var(--bg) 30%);display:flex;justify-content:center}
+  .savebar .btn{width:100%;max-width:540px}
+  .success{text-align:center;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.4);color:#86efac;border-radius:12px;padding:22px 18px;margin-bottom:18px;display:none}
+  .success.show{display:block}
+  .success b{display:block;font-size:17px;margin-bottom:4px}
+  .toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(20px);opacity:0;background:#1c1f25;border:1px solid var(--line);color:var(--cream);padding:11px 18px;border-radius:9px;font-size:14px;transition:all .25s;pointer-events:none;z-index:60;max-width:90%}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{border-color:rgba(248,113,113,.5)}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div id="login">
+  <div class="card">
+    <div class="brand">WhiteIndex<small>Добавление объекта</small></div>
+    <h2>Вход для представителя</h2>
+    <label class="fld"><span class="lbl">Email</span><input id="email" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com"></label>
+    <label class="fld"><span class="lbl">Пароль</span><input id="password" type="password" autocomplete="current-password" placeholder="••••••••"></label>
+    <button class="btn primary block" id="loginBtn">Войти</button>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand" style="font-size:18px">WhiteIndex<small>Новый объект</small></div>
+      <div style="text-align:right">
+        <div class="who" id="who"></div>
+        <button class="btn ghost" id="logoutBtn" style="padding:7px 12px;margin-top:6px">Выйти</button>
+      </div>
+    </div>
+
+    <div class="success" id="success"><b>Отправлено на проверку</b>Объект сохранён как скрытый. Менеджер проверит и опубликует.</div>
+
+    <label class="fld"><span class="lbl">Название объекта *</span><input id="f_name" placeholder="Ocean Bay Residence"></label>
+
+    <label class="fld"><span class="lbl">Статус *</span>
+      <select id="f_status">
+        <option value="" disabled selected>— Выберите статус —</option>
+        <option value="construction">Строится</option>
+        <option value="presale">Пресейл</option>
+        <option value="ready">Готово</option>
+        <option value="sold_out">Продано</option>
+      </select>
+    </label>
+
+    <div class="row2">
+      <label class="fld"><span class="lbl">Район</span><input id="f_district" placeholder="Bella Vista"></label>
+      <label class="fld"><span class="lbl">Город</span><input id="f_city" placeholder="Panama City"></label>
+    </div>
+    <label class="fld"><span class="lbl">Страна</span><input id="f_country" value="Panama"></label>
+
+    <div class="coords-row">
+      <label class="fld"><span class="lbl">Координаты *</span><input id="f_coords" inputmode="decimal" placeholder="8.988, -79.523"></label>
+      <button class="btn ghost gpsbtn" id="gpsBtn">📍 Моё место</button>
+    </div>
+    <div class="hint">Вставьте «широта, долгота» из Google Maps или нажмите «Моё место», если стоите на объекте.</div>
+    <div style="height:16px"></div>
+
+    <div class="row2">
+      <label class="fld"><span class="lbl">Цена от</span><input id="f_pmin" type="number" inputmode="numeric" placeholder="150000"></label>
+      <label class="fld"><span class="lbl">Валюта</span><input id="f_cur" value="USD"></label>
+    </div>
+
+    <label class="fld"><span class="lbl">Краткое описание / первичная информация</span><textarea id="f_desc" placeholder="Что важно знать об объекте, условия пресейла, контакт девелопера…"></textarea></label>
+    <label class="fld"><span class="lbl">Инвест-тезис (одна строка)</span><input id="f_thesis" placeholder="Высокий спрос на аренду рядом с метро"></label>
+    <label class="fld"><span class="lbl">Особенности (через запятую)</span><input id="f_highlights" placeholder="Ocean View, Near Metro, Pool"></label>
+    <label class="fld"><span class="lbl">Девелопер</span><input id="f_dev" placeholder="Grupo …"></label>
+
+    <label class="fld"><span class="lbl">Фото (до 8)</span></label>
+    <div class="photos" id="photos">
+      <button class="addphoto" id="addPhoto">+</button>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" multiple style="display:none">
+    </div>
+  </div>
+
+  <div class="savebar"><button class="btn primary" id="saveBtn">Сохранить объект</button></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://vidqebjgbzafabdocogu.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_GOowu5FveA_RwlmvgGLlSg_Twf_VdVz';
+const BUCKET = 'project-images';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+const $ = id => document.getElementById(id);
+let currentUser = null;
+let photoUrls = [];
+
+let toastTimer;
+function toast(text, isErr){
+  const t = $('toast'); t.textContent = text; t.className = 'toast show' + (isErr ? ' err' : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = 'toast', 2800);
+}
+function val(id){ const e = $(id); return e ? e.value.trim() : ''; }
+function numOrNull(id){ const v = val(id); return v === '' ? null : Number(v); }
+function escapeHtml(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function genId(name){
+  let base = (name || 'obj').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'obj';
+  return base + '-' + Math.random().toString(36).slice(2,7);
+}
+function parseCoords(str){
+  if(!str) return null;
+  str = String(str).trim();
+  let m;
+  m = str.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/); if(m) return {lat:+m[1], lng:+m[2]};
+  m = str.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/); if(m) return {lat:+m[1], lng:+m[2]};
+  m = str.match(/[?&](?:q|query|ll|sll|center|destination)=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/); if(m) return {lat:+m[1], lng:+m[2]};
+  m = str.match(/^\s*(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)\s*$/); if(m) return {lat:+m[1], lng:+m[2]};
+  return null;
+}
+
+async function init(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session) showApp(session); else showLogin();
+}
+function showLogin(){ $('login').style.display = 'flex'; $('app').style.display = 'none'; }
+function showApp(session){
+  currentUser = session.user;
+  $('login').style.display = 'none'; $('app').style.display = 'block';
+  $('who').textContent = currentUser.email;
+}
+$('loginBtn').addEventListener('click', doLogin);
+$('password').addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+async function doLogin(){
+  const email = val('email'), password = $('password').value;
+  const m = $('loginMsg'); m.className = 'msg';
+  if(!email || !password){ m.className = 'msg err'; m.textContent = 'Введите email и пароль.'; return; }
+  $('loginBtn').disabled = true; $('loginBtn').textContent = 'Вход…';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  $('loginBtn').disabled = false; $('loginBtn').textContent = 'Войти';
+  if(error){ m.className = 'msg err'; m.textContent = 'Не удалось войти: ' + error.message; return; }
+  showApp(data.session);
+}
+$('logoutBtn').addEventListener('click', async () => { await sb.auth.signOut(); currentUser = null; showLogin(); });
+
+$('gpsBtn').addEventListener('click', () => {
+  if(!navigator.geolocation){ toast('Геолокация недоступна на этом устройстве', true); return; }
+  toast('Определяю координаты…');
+  navigator.geolocation.getCurrentPosition(
+    pos => { $('f_coords').value = pos.coords.latitude.toFixed(6) + ', ' + pos.coords.longitude.toFixed(6); toast('Координаты получены'); },
+    err => toast('Не удалось получить координаты: ' + err.message, true),
+    { enableHighAccuracy:true, timeout:10000, maximumAge:0 }
+  );
+});
+
+$('addPhoto').addEventListener('click', () => $('photoInput').click());
+$('photoInput').addEventListener('change', async e => {
+  const files = [].slice.call(e.target.files);
+  for(const f of files){
+    if(photoUrls.length >= 8){ toast('Не больше 8 фото', true); break; }
+    const url = await uploadImage(f);
+    if(url){ photoUrls.push(url); renderPhotos(); }
+  }
+  e.target.value = '';
+});
+async function uploadImage(file){
+  if(!file) return null;
+  toast('Загрузка фото…');
+  const safe = file.name.toLowerCase().replace(/[^a-z0-9.\-_]+/g,'-');
+  const path = 'intake/' + Date.now() + '-' + Math.random().toString(36).slice(2,6) + '-' + safe;
+  const up = await sb.storage.from(BUCKET).upload(path, file, { upsert:true, cacheControl:'3600' });
+  if(up.error){ toast('Ошибка загрузки: ' + up.error.message, true); return null; }
+  const pub = sb.storage.from(BUCKET).getPublicUrl(path);
+  return pub.data.publicUrl;
+}
+function renderPhotos(){
+  const c = $('photos');
+  [].slice.call(c.querySelectorAll('.photo')).forEach(n => n.remove());
+  const addBtn = $('addPhoto');
+  photoUrls.forEach((u, i) => {
+    const d = document.createElement('div'); d.className = 'photo';
+    d.innerHTML = '<img src="' + escapeHtml(u) + '"><button class="x" type="button" aria-label="Удалить">×</button>';
+    d.querySelector('.x').addEventListener('click', () => { photoUrls.splice(i,1); renderPhotos(); });
+    c.insertBefore(d, addBtn);
+  });
+  addBtn.style.display = photoUrls.length >= 8 ? 'none' : 'flex';
+}
+
+$('saveBtn').addEventListener('click', saveObject);
+async function saveObject(){
+  const name = val('f_name');
+  if(!name){ toast('Укажите название объекта.', true); $('f_name').focus(); return; }
+  if(!val('f_status')){ toast('Выберите статус.', true); $('f_status').focus(); return; }
+  const coords = parseCoords(val('f_coords'));
+  if(!coords){ toast('Укажите координаты (широта, долгота) или нажмите «Моё место».', true); $('f_coords').focus(); return; }
+
+  const highlights = val('f_highlights').split(',').map(s => s.trim()).filter(Boolean);
+  const row = {
+    id: genId(name),
+    is_published: false,
+    captured_by: currentUser ? currentUser.email : null,
+    sort_order: 999,
+    name: name, status: val('f_status'),
+    district: val('f_district') || null, city: val('f_city') || null, country: val('f_country') || null,
+    lng: coords.lng, lat: coords.lat,
+    cover_image: photoUrls[0] || null, cover_images: photoUrls.slice(),
+    investment_thesis: val('f_thesis') || null,
+    description: val('f_desc') || null,
+    price_min: numOrNull('f_pmin'), currency: val('f_cur') || 'USD',
+    highlights: highlights,
+    investment_profile: { developer: val('f_dev') || null, developerStatus: 'Not rated' }
+  };
+
+  $('saveBtn').disabled = true; $('saveBtn').textContent = 'Сохранение…';
+  const { error } = await sb.from('projects').insert(row);
+  $('saveBtn').disabled = false; $('saveBtn').textContent = 'Сохранить объект';
+  if(error){ toast('Ошибка сохранения: ' + error.message, true); return; }
+
+  resetForm();
+  $('success').classList.add('show');
+  window.scrollTo({ top:0, behavior:'smooth' });
+  setTimeout(() => $('success').classList.remove('show'), 6000);
+}
+function resetForm(){
+  ['f_name','f_district','f_city','f_coords','f_pmin','f_desc','f_thesis','f_highlights','f_dev'].forEach(id => $(id).value = '');
+  $('f_status').selectedIndex = 0;
+  $('f_country').value = 'Panama';
+  $('f_cur').value = 'USD';
+  photoUrls = []; renderPhotos();
+}
+
+init();
+</script>
+</body>
+</html>
