@@ -469,6 +469,35 @@ map.on('load', () => {
     window.addEventListener('resize', doResize);
 });
 map.on('style.load', () => { setupMapLayersAndEvents(); renderProjectMarkers(); });
+    function openSidebar() { var s = document.getElementById('wi-sidebar-element'); var b = document.getElementById('wi-sidebar-backdrop'); if (s) s.classList.add('is-open'); if (b) b.classList.add('is-open'); }
+function closeSidebar() { var s = document.getElementById('wi-sidebar-element'); var b = document.getElementById('wi-sidebar-backdrop'); if (s) s.classList.remove('is-open'); if (b) b.classList.remove('is-open'); }
+function toggleSidebar() { var s = document.getElementById('wi-sidebar-element'); if (s && s.classList.contains('is-open')) closeSidebar(); else openSidebar(); }
+function setupMobileDrawer() {
+    var wrapper = document.getElementById('wi-map-root');
+    var sidebar = document.getElementById('wi-sidebar-element');
+    var mapBox = document.getElementById('mapbox-panama-container');
+    if (!wrapper || !sidebar || !mapBox) return;
+    if (!document.getElementById('wi-menu-toggle')) {
+        var btn = document.createElement('button');
+        btn.id = 'wi-menu-toggle'; btn.className = 'wi-menu-toggle'; btn.setAttribute('aria-label', 'Меню фильтров');
+        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>';
+        btn.addEventListener('click', toggleSidebar);
+        mapBox.appendChild(btn);
+    }
+    if (!document.getElementById('wi-sidebar-backdrop')) {
+        var bd = document.createElement('div');
+        bd.id = 'wi-sidebar-backdrop'; bd.className = 'wi-sidebar-backdrop';
+        bd.addEventListener('click', closeSidebar);
+        wrapper.appendChild(bd);
+    }
+    if (!sidebar.querySelector('.wi-sidebar-close')) {
+        var cl = document.createElement('button');
+        cl.className = 'wi-sidebar-close'; cl.setAttribute('aria-label', 'Закрыть'); cl.innerHTML = '&times;';
+        cl.addEventListener('click', closeSidebar);
+        sidebar.insertBefore(cl, sidebar.firstChild);
+    }
+}
+setupMobileDrawer();
 function switchMapStyle() {
     currentPopup.remove(); const btnText = document.getElementById('wi-style-text');
     if (activeStyleType === 'light') { activeStyleType = 'satellite'; map.setStyle(styleUrls.satellite, { diff: false }); btnText.setAttribute('data-i18n', 'style_light'); btnText.innerText = L()['style_light']; }
@@ -664,10 +693,19 @@ document.addEventListener('mousedown', (e) => { if (!mapContainer.contains(e.tar
 .wi-card-btn.ghost:hover { background: rgba(201,168,76,0.12); }
 .wi-card-btn.ghost.is-active { background: rgba(201,168,76,0.18); color: #e9dcb6; border-color: #C9A84C; }
 @media (prefers-reduced-motion: reduce) { .wi-detail-panel { transition: none; } }
+.wi-menu-toggle { display: none; position: absolute; top: 12px; left: 12px; z-index: 16; width: 42px; height: 42px; align-items: center; justify-content: center; border-radius: 9px; background: rgba(15,18,22,0.94); border: 1px solid rgba(201,168,76,0.5); color: #C9A84C; cursor: pointer; box-shadow: 0 2px 12px rgba(0,0,0,0.45); padding: 0; }
+.wi-menu-toggle svg { display: block; }
+.wi-sidebar-backdrop { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 25; }
+.wi-sidebar-backdrop.is-open { opacity: 1; pointer-events: auto; }
+.wi-sidebar-close { display: none; position: absolute; top: 14px; right: 14px; z-index: 5; width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(255,255,255,0.10); color: #fff; font-size: 22px; line-height: 1; cursor: pointer; align-items: center; justify-content: center; padding: 0; }
 @media (max-width: 768px) {
-    .wi-map-wrapper.dark-theme { flex-direction: column; height: 100vh; }
-    .wi-map-wrapper.dark-theme .wi-map-sidebar { width: 100%; height: auto; padding: 25px 20px; }
-    #mapbox-panama-container { width: 100%; flex: 1; min-height: 320px; }
+    .wi-map-wrapper.dark-theme { flex-direction: row; height: 100vh; }
+    .wi-map-wrapper.dark-theme .wi-map-sidebar { position: absolute; top: 0; left: 0; z-index: 30; width: 86%; max-width: 330px; height: 100%; padding: 24px 22px; transform: translateX(-100%); transition: transform .3s ease; box-shadow: 6px 0 32px rgba(0,0,0,0.55); }
+    .wi-map-wrapper.dark-theme .wi-map-sidebar.is-open { transform: translateX(0); }
+    #mapbox-panama-container { width: 100%; height: 100%; flex: 1; min-height: 0; }
+    .wi-menu-toggle { display: flex; }
+    .wi-sidebar-backdrop { display: block; }
+    .wi-sidebar-close { display: flex; }
     .wi-map-btn { top: auto; bottom: 20px; right: 10px; }
     .wi-detail-panel { top: auto; bottom: 0; left: 0; right: 0; width: 100%; max-width: 100%; height: auto; max-height: 92%; border-left: none; border-top: 1px solid rgba(201,168,76,0.4); border-radius: 16px 16px 0 0; transform: translateY(100%); box-shadow: 0 -16px 40px rgba(0,0,0,0.55); }
     .wi-detail-panel.is-open { transform: translateY(0); }
