@@ -18,21 +18,26 @@
   .wrap{max-width:540px;margin:0 auto;padding:18px 16px 90px}
   .brand{font-family:var(--serif);font-size:22px;color:var(--gold);margin:0}
   .brand small{display:block;font-family:var(--sans);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:4px}
+
+  /* login */
   #login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:22px}
   .card{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
   .card h2{font-family:var(--serif);font-weight:400;font-size:18px;margin:20px 0 16px}
+
   label.fld{display:block;margin-bottom:16px}
   .lbl{display:block;font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
   input,select,textarea{width:100%;background:var(--panel2);border:1px solid var(--line2);border-radius:9px;color:var(--cream);font-family:var(--sans);font-size:16px;padding:13px 13px;outline:none}
   input:focus,select:focus,textarea:focus{border-color:var(--gold)}
   textarea{resize:vertical;min-height:90px;line-height:1.5}
   select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 20px,calc(100% - 13px) 20px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase;padding:15px 18px;border-radius:10px}
   .btn.primary{background:linear-gradient(135deg,var(--gold),var(--gold-d));color:#1a1408}
   .btn.ghost{background:transparent;color:var(--gold);border:1px solid var(--line)}
   .btn.block{width:100%}
   .msg{font-size:13px;padding:10px 12px;border-radius:8px;margin-top:12px;display:none}
   .msg.err{display:block;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);color:#fda4a4}
+
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
   .who{font-size:12px;color:var(--muted)}
   .row2{display:flex;gap:10px}.row2>*{flex:1}
@@ -40,16 +45,22 @@
   .coords-row .fld{flex:1;margin-bottom:0}
   .gpsbtn{flex:0 0 auto;white-space:nowrap;padding:13px 14px}
   .hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+
   .photos{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
   .photo{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;border:1px solid var(--line2);background:var(--panel2)}
   .photo img{width:100%;height:100%;object-fit:cover;display:block}
   .photo .x{position:absolute;top:3px;right:3px;width:22px;height:22px;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:14px;line-height:1;cursor:pointer}
   .addphoto{width:84px;height:84px;border-radius:10px;border:1px dashed var(--line);background:transparent;color:var(--gold);font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .unit{position:relative;background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:12px 12px 12px;margin-bottom:10px}
+  .unit .x{position:absolute;top:8px;right:8px;width:26px;height:26px;border:0;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;font-size:15px;line-height:1;cursor:pointer}
+
   .savebar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px;background:linear-gradient(180deg,transparent,var(--bg) 30%);display:flex;justify-content:center}
   .savebar .btn{width:100%;max-width:540px}
+
   .success{text-align:center;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.4);color:#86efac;border-radius:12px;padding:22px 18px;margin-bottom:18px;display:none}
   .success.show{display:block}
   .success b{display:block;font-size:17px;margin-bottom:4px}
+
   .toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(20px);opacity:0;background:#1c1f25;border:1px solid var(--line);color:var(--cream);padding:11px 18px;border-radius:9px;font-size:14px;transition:all .25s;pointer-events:none;z-index:60;max-width:90%}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .toast.err{border-color:rgba(248,113,113,.5)}
@@ -58,6 +69,7 @@
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="login">
   <div class="card">
     <div class="brand">WhiteIndex<small>Добавление объекта</small></div>
@@ -69,6 +81,7 @@
   </div>
 </div>
 
+<!-- APP -->
 <div id="app" style="display:none">
   <div class="wrap">
     <div class="topbar">
@@ -97,8 +110,6 @@
       <label class="fld"><span class="lbl">Район</span><input id="f_district" placeholder="Bella Vista"></label>
       <label class="fld"><span class="lbl">Город</span><input id="f_city" placeholder="Panama City"></label>
     </div>
-    <label class="fld"><span class="lbl">Страна</span><input id="f_country" value="Panama"></label>
-
     <div class="coords-row">
       <label class="fld"><span class="lbl">Координаты *</span><input id="f_coords" inputmode="decimal" placeholder="8.988, -79.523"></label>
       <button class="btn ghost gpsbtn" id="gpsBtn">📍 Моё место</button>
@@ -107,9 +118,18 @@
     <div style="height:16px"></div>
 
     <div class="row2">
-      <label class="fld"><span class="lbl">Цена от</span><input id="f_pmin" type="number" inputmode="numeric" placeholder="150000"></label>
+      <label class="fld"><span class="lbl">Цена от (общая)</span><input id="f_pmin" type="number" inputmode="numeric" placeholder="можно оставить пустым"></label>
       <label class="fld"><span class="lbl">Валюта</span><input id="f_cur" value="USD"></label>
     </div>
+
+    <label class="fld" style="margin-bottom:8px"><span class="lbl">Юниты и стартовые цены</span></label>
+    <div id="unitRows"></div>
+    <button class="btn ghost block" id="addUnit" type="button" style="margin-bottom:18px">+ Добавить тип юнита</button>
+
+    <label class="fld"><span class="lbl">Срок сдачи</span><input id="f_ddate" placeholder="Q4 2027 или Delivered"></label>
+    <label class="fld" style="margin-bottom:8px"><span class="lbl">Фазы сдачи (если объект сдаётся очередями)</span></label>
+    <div id="phaseRows"></div>
+    <button class="btn ghost block" id="addPhase" type="button" style="margin-bottom:18px">+ Добавить фазу</button>
 
     <label class="fld"><span class="lbl">Краткое описание / первичная информация</span><textarea id="f_desc" placeholder="Что важно знать об объекте, условия пресейла, контакт девелопера…"></textarea></label>
     <label class="fld"><span class="lbl">Инвест-тезис (одна строка)</span><input id="f_thesis" placeholder="Высокий спрос на аренду рядом с метро"></label>
@@ -162,6 +182,7 @@ function parseCoords(str){
   return null;
 }
 
+/* ---------- Auth ---------- */
 async function init(){
   const { data:{ session } } = await sb.auth.getSession();
   if(session) showApp(session); else showLogin();
@@ -186,6 +207,7 @@ async function doLogin(){
 }
 $('logoutBtn').addEventListener('click', async () => { await sb.auth.signOut(); currentUser = null; showLogin(); });
 
+/* ---------- GPS ---------- */
 $('gpsBtn').addEventListener('click', () => {
   if(!navigator.geolocation){ toast('Геолокация недоступна на этом устройстве', true); return; }
   toast('Определяю координаты…');
@@ -196,6 +218,7 @@ $('gpsBtn').addEventListener('click', () => {
   );
 });
 
+/* ---------- Photos ---------- */
 $('addPhoto').addEventListener('click', () => $('photoInput').click());
 $('photoInput').addEventListener('change', async e => {
   const files = [].slice.call(e.target.files);
@@ -229,6 +252,45 @@ function renderPhotos(){
   addBtn.style.display = photoUrls.length >= 8 ? 'none' : 'flex';
 }
 
+/* ---------- Units ---------- */
+$('addUnit').addEventListener('click', () => addUnit());
+function addUnit(u){
+  u = u || {};
+  const wrap = document.createElement('div'); wrap.className = 'unit';
+  wrap.innerHTML = '<button class="x" type="button" aria-label="Удалить">×</button>'
+    + '<label class="fld" style="margin-bottom:10px"><span class="lbl">Тип</span><input class="u-type" placeholder="1 BR / Studio / 2 BR" value="' + escapeHtml(u.type || '') + '"></label>'
+    + '<div class="row2"><label class="fld" style="margin-bottom:0"><span class="lbl">Кол-во</span><input class="u-count" type="number" inputmode="numeric" placeholder="20" value="' + (u.count != null ? u.count : '') + '"></label>'
+    + '<label class="fld" style="margin-bottom:0"><span class="lbl">Цена от</span><input class="u-price" type="number" inputmode="numeric" placeholder="150000" value="' + (u.priceFrom != null ? u.priceFrom : '') + '"></label></div>';
+  wrap.querySelector('.x').addEventListener('click', () => wrap.remove());
+  $('unitRows').appendChild(wrap);
+}
+function readUnits(){
+  return [].slice.call(document.querySelectorAll('#unitRows .unit')).map(function(w){
+    const type = w.querySelector('.u-type').value.trim();
+    const c = w.querySelector('.u-count').value.trim();
+    const pr = w.querySelector('.u-price').value.trim();
+    return { type: type || null, count: c === '' ? null : Number(c), priceFrom: pr === '' ? null : Number(pr) };
+  }).filter(function(u){ return u.type || u.count != null || u.priceFrom != null; });
+}
+
+/* ---------- Delivery phases ---------- */
+$('addPhase').addEventListener('click', () => addPhase());
+function addPhase(ph){
+  ph = ph || {};
+  const wrap = document.createElement('div'); wrap.className = 'unit';
+  wrap.innerHTML = '<button class="x" type="button" aria-label="Удалить">×</button>'
+    + '<label class="fld" style="margin-bottom:10px"><span class="lbl">Название фазы</span><input class="ph-name" placeholder="Phase 1" value="' + escapeHtml(ph.name || '') + '"></label>'
+    + '<label class="fld" style="margin-bottom:0"><span class="lbl">Срок</span><input class="ph-date" placeholder="Q4 2027" value="' + escapeHtml(ph.date || '') + '"></label>';
+  wrap.querySelector('.x').addEventListener('click', () => wrap.remove());
+  $('phaseRows').appendChild(wrap);
+}
+function readPhases(){
+  return [].slice.call(document.querySelectorAll('#phaseRows .unit')).map(function(w){
+    return { name: w.querySelector('.ph-name').value.trim() || null, date: w.querySelector('.ph-date').value.trim() || null };
+  }).filter(function(p){ return p.name || p.date; });
+}
+
+/* ---------- Save ---------- */
 $('saveBtn').addEventListener('click', saveObject);
 async function saveObject(){
   const name = val('f_name');
@@ -238,18 +300,25 @@ async function saveObject(){
   if(!coords){ toast('Укажите координаты (широта, долгота) или нажмите «Моё место».', true); $('f_coords').focus(); return; }
 
   const highlights = val('f_highlights').split(',').map(s => s.trim()).filter(Boolean);
+  const units = readUnits();
+  let priceMin = numOrNull('f_pmin');
+  if(priceMin == null){ const ps = units.map(u => u.priceFrom).filter(v => v != null); if(ps.length) priceMin = Math.min.apply(null, ps); }
+  const phases = readPhases();
+  let delivery;
+  if(phases.length){ delivery = { type:'phased', date:null, phases:phases }; }
+  else { const dd = val('f_ddate'); delivery = dd ? { type:'single', date:dd, phases:null } : null; }
   const row = {
     id: genId(name),
     is_published: false,
     captured_by: currentUser ? currentUser.email : null,
     sort_order: 999,
     name: name, status: val('f_status'),
-    district: val('f_district') || null, city: val('f_city') || null, country: val('f_country') || null,
+    district: val('f_district') || null, city: val('f_city') || null, country: 'Panama',
     lng: coords.lng, lat: coords.lat,
     cover_image: photoUrls[0] || null, cover_images: photoUrls.slice(),
     investment_thesis: val('f_thesis') || null,
     description: val('f_desc') || null,
-    price_min: numOrNull('f_pmin'), currency: val('f_cur') || 'USD',
+    price_min: priceMin, currency: val('f_cur') || 'USD', units: units, delivery: delivery,
     highlights: highlights,
     investment_profile: { developer: val('f_dev') || null, developerStatus: 'Not rated' }
   };
@@ -265,11 +334,12 @@ async function saveObject(){
   setTimeout(() => $('success').classList.remove('show'), 6000);
 }
 function resetForm(){
-  ['f_name','f_district','f_city','f_coords','f_pmin','f_desc','f_thesis','f_highlights','f_dev'].forEach(id => $(id).value = '');
+  ['f_name','f_district','f_city','f_coords','f_pmin','f_ddate','f_desc','f_thesis','f_highlights','f_dev'].forEach(id => $(id).value = '');
   $('f_status').selectedIndex = 0;
-  $('f_country').value = 'Panama';
   $('f_cur').value = 'USD';
   photoUrls = []; renderPhotos();
+  $('unitRows').innerHTML = '';
+  $('phaseRows').innerHTML = '';
 }
 
 init();
