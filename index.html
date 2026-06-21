@@ -386,13 +386,17 @@ function toggleCompare(id, btn) {
 /* ===== Объекты как НАТИВНЫЕ слои карты (не уезжают при зуме) ===== */
 function pinStrokeColor() { return ['match', ['get', 'status'], 'ready', '#34d399', 'presale', '#38bdf8', 'sold_out', '#8a8f99', '#C9A84C']; }
 function buildPinImage(status) {
-    const size = 42, dpr = 2, px = size * dpr;
+    const size = 44, dpr = 2, px = size * dpr;
     const canvas = document.createElement('canvas'); canvas.width = px; canvas.height = px;
     const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
-    const c = size / 2, r = size / 2 - 3;
-    ctx.beginPath(); ctx.arc(c, c, r, 0, Math.PI * 2); ctx.fillStyle = '#0d0d0d'; ctx.fill();
-    ctx.lineWidth = 2.5; ctx.strokeStyle = statusColor(status); ctx.stroke();
-    const icon = size * 0.46, off = (size - icon) / 2, sc = icon / 24;
+    const c = size / 2, rDark = size / 2 - 5, rHalo = size / 2 - 3;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 1.5;
+    ctx.beginPath(); ctx.arc(c, c, rHalo, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill();
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(c, c, rDark, 0, Math.PI * 2); ctx.fillStyle = '#0d0d0d'; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = statusColor(status); ctx.stroke();
+    const icon = size * 0.42, off = (size - icon) / 2, sc = icon / 24;
     ctx.save(); ctx.translate(off, off); ctx.scale(sc, sc);
     ctx.fillStyle = statusColor(status); ctx.fill(new Path2D('M3 21V9L12 3L21 9V21H15V15H9V21H3Z')); ctx.restore();
     return ctx.getImageData(0, 0, px, px);
@@ -463,6 +467,7 @@ function closeDetailPanel() {
     if (!panelEls) return;
     panelEls.panel.classList.remove('is-open'); panelEls.backdrop.classList.remove('is-open'); panelEls.panel.style.transform = '';
     activeProjectId = null; updateActivePin();
+    if (map && map.getPitch && map.getPitch() > 0) map.easeTo({ pitch: 0, duration: 600 });
 }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDetailPanel(); });
 function setupSheetDrag(panel) {
