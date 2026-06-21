@@ -201,6 +201,8 @@ const map = new mapboxgl.Map({
     center: [-79.52, 8.98], zoom: 11, minZoom: 8.2, maxBounds: strictPanamaBounds, pitch: 0, scrollZoom: false, attributionControl: false
 });
 map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+map.once('idle', () => { try { map.resize(); } catch (e) {} });
+[200, 600, 1200, 2500, 4000].forEach(t => setTimeout(() => { try { map.resize(); } catch (e) {} }, t));
 map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
 const currentPopup = new mapboxgl.Popup({ closeButton: true, closeOnClick: true, className: 'wi-custom-popup' });
 
@@ -407,7 +409,7 @@ function ensurePinImages() {
 function projectsGeoJSON() {
     return { type: 'FeatureCollection', features: projects
         .filter(p => p && Array.isArray(p.coordinates) && isFinite(p.coordinates[0]) && isFinite(p.coordinates[1]))
-        .map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [Number(p.coordinates[0]), Number(p.coordinates[1])] }, properties: { id: String(p.id), status: p.status || 'construction', name: p.name || '' } })) };
+        .map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [Number(p.coordinates[0]), Number(p.coordinates[1])] }, properties: { id: String(p.id), status: p.status || 'construction', name: p.name || '', icon: 'wi-pin-' + (p.status || 'construction') } })) };
 }
 function statusFilter() { return ['in', ['get', 'status'], ['literal', Array.from(visibleStatuses)]]; }
 function activeFilter() { return ['==', ['get', 'id'], activeProjectId == null ? '__none__' : String(activeProjectId)]; }
@@ -423,7 +425,7 @@ function renderProjectMarkers() {
     } else { map.setFilter('wi-projects-active', activeFilter()); }
     if (!map.getLayer('wi-projects-pins')) {
         map.addLayer({ id: 'wi-projects-pins', type: 'symbol', source: 'wi-projects', filter: statusFilter(),
-            layout: { 'icon-image': ['concat', 'wi-pin-', ['get', 'status']], 'icon-size': ['interpolate', ['linear'], ['zoom'], 9, 0.45, 12, 0.72, 15, 1, 17, 1.12], 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
+            layout: { 'icon-image': ['get', 'icon'], 'icon-size': ['interpolate', ['linear'], ['zoom'], 9, 0.45, 12, 0.72, 15, 1, 17, 1.12], 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
     } else { map.setFilter('wi-projects-pins', statusFilter()); }
     applyProjectVisibility();
 }
@@ -462,6 +464,11 @@ function openDetailPanel(p) {
     const els = ensureDetailPanel(); els.content.innerHTML = renderProjectCard(p); els.content.scrollTop = 0; els.panel.style.transform = '';
     requestAnimationFrame(() => { els.panel.classList.add('is-open'); els.backdrop.classList.add('is-open'); });
     activeProjectId = p.id; updateActivePin();
+    if (map && Array.isArray(p.coordinates) && isFinite(p.coordinates[0]) && isFinite(p.coordinates[1])) {
+        const isMobile = window.matchMedia('(max-width: 768px)').matches;
+        const padding = isMobile ? { top: 0, bottom: Math.round(window.innerHeight * 0.55), left: 0, right: 0 } : { top: 0, bottom: 0, left: 0, right: 440 };
+        map.flyTo({ center: [Number(p.coordinates[0]), Number(p.coordinates[1])], zoom: Math.max(map.getZoom(), 15.4), pitch: 48, duration: 1300, padding: padding, essential: true });
+    }
 }
 function closeDetailPanel() {
     if (!panelEls) return;
