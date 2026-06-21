@@ -467,7 +467,7 @@ function openDetailPanel(p) {
     if (map && Array.isArray(p.coordinates) && isFinite(p.coordinates[0]) && isFinite(p.coordinates[1])) {
         const isMobile = window.matchMedia('(max-width: 768px)').matches;
         const padding = isMobile ? { top: 0, bottom: Math.round(window.innerHeight * 0.55), left: 0, right: 0 } : { top: 0, bottom: 0, left: 0, right: 440 };
-        map.flyTo({ center: [Number(p.coordinates[0]), Number(p.coordinates[1])], zoom: Math.max(map.getZoom(), 15.4), pitch: 48, duration: 1300, padding: padding, essential: true });
+        map.flyTo({ center: [Number(p.coordinates[0]), Number(p.coordinates[1])], zoom: Math.max(map.getZoom(), 15.4), pitch: 40, duration: 1300, padding: padding, essential: true });
     }
 }
 function closeDetailPanel() {
@@ -536,7 +536,7 @@ map.on('load', () => {
     if (window.ResizeObserver) { try { new ResizeObserver(doResize).observe(mapEl); } catch (e) {} }
     window.addEventListener('resize', doResize);
 });
-map.on('style.load', () => { setupMapLayersAndEvents(); renderProjectMarkers(); });
+map.on('style.load', () => { try { map.setTerrain(null); } catch (e) {} setupMapLayersAndEvents(); renderProjectMarkers(); });
     function openSidebar() { var s = document.getElementById('wi-sidebar-element'); var b = document.getElementById('wi-sidebar-backdrop'); if (s) s.classList.add('is-open'); if (b) b.classList.add('is-open'); }
 function closeSidebar() { var s = document.getElementById('wi-sidebar-element'); var b = document.getElementById('wi-sidebar-backdrop'); if (s) s.classList.remove('is-open'); if (b) b.classList.remove('is-open'); }
 function toggleSidebar() { var s = document.getElementById('wi-sidebar-element'); if (s && s.classList.contains('is-open')) closeSidebar(); else openSidebar(); }
