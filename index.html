@@ -519,10 +519,11 @@ map.on('load', () => {
     map.on('mouseenter', 'wi-projects-pins', () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'wi-projects-pins', () => { map.getCanvas().style.cursor = ''; });
     const mapEl = document.getElementById('mapbox-panama-container');
-    const doResize = () => map.resize();
-    [100, 300, 700, 1500, 3000].forEach(t => setTimeout(doResize, t));
-    if (window.ResizeObserver) { try { new ResizeObserver(doResize).observe(mapEl); } catch (e) {} }
-    window.addEventListener('resize', doResize);
+    const forceRender = () => { try { map.resize(); map.triggerRepaint(); } catch (e) {} };
+    [0, 100, 300, 700, 1500, 3000].forEach(t => setTimeout(forceRender, t));
+    if (window.ResizeObserver) { try { new ResizeObserver(forceRender).observe(mapEl); } catch (e) {} }
+    window.addEventListener('resize', forceRender);
+    map.once('idle', () => { forceRender(); try { map.panBy([0, 1], { duration: 0 }); map.panBy([0, -1], { duration: 0 }); } catch (e) {} });
 });
 map.on('style.load', () => { setupMapLayersAndEvents(); renderProjectMarkers(); });
     function openSidebar() { var s = document.getElementById('wi-sidebar-element'); var b = document.getElementById('wi-sidebar-backdrop'); if (s) s.classList.add('is-open'); if (b) b.classList.add('is-open'); }
