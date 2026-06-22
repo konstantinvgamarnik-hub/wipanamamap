@@ -419,7 +419,8 @@ function renderProjectMarkers() {
     } else { map.setFilter('wi-projects-active', activeFilter()); }
     if (!map.getLayer('wi-projects-pins')) {
         map.addLayer({ id: 'wi-projects-pins', type: 'symbol', source: 'wi-projects', filter: statusFilter(),
-            layout: { 'icon-image': ['concat', 'wi-pin-', ['get', 'status']], 'icon-size': ['interpolate', ['linear'], ['zoom'], 9, 0.45, 12, 0.72, 15, 1, 17, 1.12], 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
+            layout: { 'icon-image': ['get', 'icon']
+], 'icon-size': ['interpolate', ['linear'], ['zoom'], 9, 0.45, 12, 0.72, 15, 1, 17, 1.12], 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
     } else { map.setFilter('wi-projects-pins', statusFilter()); }
     applyProjectVisibility();
 }
