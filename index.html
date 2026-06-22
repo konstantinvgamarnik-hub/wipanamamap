@@ -403,7 +403,7 @@ function ensurePinImages() {
 function projectsGeoJSON() {
     return { type: 'FeatureCollection', features: projects
         .filter(p => p && Array.isArray(p.coordinates) && isFinite(p.coordinates[0]) && isFinite(p.coordinates[1]))
-        .map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [Number(p.coordinates[0]), Number(p.coordinates[1])] }, properties: { id: String(p.id), status: p.status || 'construction', name: p.name || '' } })) };
+        .map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [Number(p.coordinates[0]), Number(p.coordinates[1])] }, properties: { id: String(p.id), status: p.status || 'construction', name: p.name || '', icon: 'wi-pin-' + (p.status || 'construction') } })) };
 }
 function statusFilter() { return ['in', ['get', 'status'], ['literal', Array.from(visibleStatuses)]]; }
 function activeFilter() { return ['==', ['get', 'id'], activeProjectId == null ? '__none__' : String(activeProjectId)]; }
