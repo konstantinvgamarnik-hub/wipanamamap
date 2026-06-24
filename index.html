@@ -67,7 +67,7 @@
 let currentMapLang = 'en';
 let activeStyleType = 'light';
 const styleUrls = {
-   light: 'mapbox://styles/konstantinvgm/cmqnpj7bd00dz01r5fgiw4coc',
+    light: 'mapbox://styles/konstantinvgm/cmp9dsx09002e01skbgedc555',
     satellite: 'mapbox://styles/mapbox/satellite-streets-v12'
 };
 const translations = {
@@ -386,17 +386,13 @@ function toggleCompare(id, btn) {
 /* ===== Объекты как НАТИВНЫЕ слои карты (не уезжают при зуме) ===== */
 function pinStrokeColor() { return ['match', ['get', 'status'], 'ready', '#34d399', 'presale', '#38bdf8', 'sold_out', '#8a8f99', '#C9A84C']; }
 function buildPinImage(status) {
-    const size = 44, dpr = 2, px = size * dpr;
+    const size = 42, dpr = 2, px = size * dpr;
     const canvas = document.createElement('canvas'); canvas.width = px; canvas.height = px;
     const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
-    const c = size / 2, rDark = size / 2 - 5, rHalo = size / 2 - 3;
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 1.5;
-    ctx.beginPath(); ctx.arc(c, c, rHalo, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill();
-    ctx.restore();
-    ctx.beginPath(); ctx.arc(c, c, rDark, 0, Math.PI * 2); ctx.fillStyle = '#0d0d0d'; ctx.fill();
-    ctx.lineWidth = 2; ctx.strokeStyle = statusColor(status); ctx.stroke();
-    const icon = size * 0.42, off = (size - icon) / 2, sc = icon / 24;
+    const c = size / 2, r = size / 2 - 3;
+    ctx.beginPath(); ctx.arc(c, c, r, 0, Math.PI * 2); ctx.fillStyle = '#0d0d0d'; ctx.fill();
+    ctx.lineWidth = 2.5; ctx.strokeStyle = statusColor(status); ctx.stroke();
+    const icon = size * 0.46, off = (size - icon) / 2, sc = icon / 24;
     ctx.save(); ctx.translate(off, off); ctx.scale(sc, sc);
     ctx.fillStyle = statusColor(status); ctx.fill(new Path2D('M3 21V9L12 3L21 9V21H15V15H9V21H3Z')); ctx.restore();
     return ctx.getImageData(0, 0, px, px);
@@ -407,7 +403,7 @@ function ensurePinImages() {
 function projectsGeoJSON() {
     return { type: 'FeatureCollection', features: projects
         .filter(p => p && Array.isArray(p.coordinates) && isFinite(p.coordinates[0]) && isFinite(p.coordinates[1]))
-        .map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [Number(p.coordinates[0]), Number(p.coordinates[1])] }, properties: { id: String(p.id), status: p.status || 'construction', name: p.name || '', icon: 'wi-pin-' + (p.status || 'construction') } })) };
+        .map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [Number(p.coordinates[0]), Number(p.coordinates[1])] }, properties: { id: String(p.id), status: p.status || 'construction', name: p.name || '' } })) };
 }
 function statusFilter() { return ['in', ['get', 'status'], ['literal', Array.from(visibleStatuses)]]; }
 function activeFilter() { return ['==', ['get', 'id'], activeProjectId == null ? '__none__' : String(activeProjectId)]; }
@@ -418,12 +414,12 @@ function renderProjectMarkers() {
     if (map.getSource('wi-projects')) { map.getSource('wi-projects').setData(data); }
     else { map.addSource('wi-projects', { type: 'geojson', data: data }); }
     if (!map.getLayer('wi-projects-active')) {
-        map.addLayer({ id: 'wi-projects-active', type: 'circle', source: 'wi-projects', slot: 'top', filter: activeFilter(),
+        map.addLayer({ id: 'wi-projects-active', type: 'circle', source: 'wi-projects', filter: activeFilter(),
             paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 9, 13, 12, 18, 15, 24, 17, 28], 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-width': 3, 'circle-stroke-color': pinStrokeColor(), 'circle-stroke-opacity': 0.5 } });
     } else { map.setFilter('wi-projects-active', activeFilter()); }
     if (!map.getLayer('wi-projects-pins')) {
-        map.addLayer({ id: 'wi-projects-pins', type: 'symbol', source: 'wi-projects', slot: 'top', filter: statusFilter(),
-            layout: { 'icon-image': ['get', 'icon'], 'icon-size': ['interpolate', ['linear'], ['zoom'], 9, 0.45, 12, 0.72, 15, 1, 17, 1.12], 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
+        map.addLayer({ id: 'wi-projects-pins', type: 'symbol', source: 'wi-projects', filter: statusFilter(),
+            layout: { 'icon-image': ['concat', 'wi-pin-', ['get', 'status']], 'icon-size': ['interpolate', ['linear'], ['zoom'], 9, 0.45, 12, 0.72, 15, 1, 17, 1.12], 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
     } else { map.setFilter('wi-projects-pins', statusFilter()); }
     applyProjectVisibility();
 }
@@ -462,17 +458,11 @@ function openDetailPanel(p) {
     const els = ensureDetailPanel(); els.content.innerHTML = renderProjectCard(p); els.content.scrollTop = 0; els.panel.style.transform = '';
     requestAnimationFrame(() => { els.panel.classList.add('is-open'); els.backdrop.classList.add('is-open'); });
     activeProjectId = p.id; updateActivePin();
-    if (map && Array.isArray(p.coordinates) && isFinite(p.coordinates[0]) && isFinite(p.coordinates[1])) {
-        const isMobile = window.matchMedia('(max-width: 768px)').matches;
-        const padding = isMobile ? { top: 0, bottom: Math.round(window.innerHeight * 0.55), left: 0, right: 0 } : { top: 0, bottom: 0, left: 0, right: 440 };
-        map.flyTo({ center: [Number(p.coordinates[0]), Number(p.coordinates[1])], zoom: Math.max(map.getZoom(), 15.4), pitch: 45, duration: 1300, padding: padding, essential: true });
-    }
 }
 function closeDetailPanel() {
     if (!panelEls) return;
     panelEls.panel.classList.remove('is-open'); panelEls.backdrop.classList.remove('is-open'); panelEls.panel.style.transform = '';
     activeProjectId = null; updateActivePin();
-    if (map && map.getPitch && map.getPitch() > 0) map.easeTo({ pitch: 0, duration: 600 });
 }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDetailPanel(); });
 function setupSheetDrag(panel) {
@@ -529,11 +519,10 @@ map.on('load', () => {
     map.on('mouseenter', 'wi-projects-pins', () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'wi-projects-pins', () => { map.getCanvas().style.cursor = ''; });
     const mapEl = document.getElementById('mapbox-panama-container');
-    const forceRender = () => { try { map.resize(); map.triggerRepaint(); } catch (e) {} };
-    [0, 100, 300, 700, 1500, 3000].forEach(t => setTimeout(forceRender, t));
-    if (window.ResizeObserver) { try { new ResizeObserver(forceRender).observe(mapEl); } catch (e) {} }
-    window.addEventListener('resize', forceRender);
-    map.once('idle', () => { forceRender(); try { map.panBy([0, 1], { duration: 0 }); map.panBy([0, -1], { duration: 0 }); } catch (e) {} });
+    const doResize = () => map.resize();
+    [100, 300, 700, 1500, 3000].forEach(t => setTimeout(doResize, t));
+    if (window.ResizeObserver) { try { new ResizeObserver(doResize).observe(mapEl); } catch (e) {} }
+    window.addEventListener('resize', doResize);
 });
 map.on('style.load', () => { setupMapLayersAndEvents(); renderProjectMarkers(); });
     function openSidebar() { var s = document.getElementById('wi-sidebar-element'); var b = document.getElementById('wi-sidebar-backdrop'); if (s) s.classList.add('is-open'); if (b) b.classList.add('is-open'); }
