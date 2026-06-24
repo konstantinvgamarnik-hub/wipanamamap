@@ -166,7 +166,19 @@ const translations = {
         footer_mode: "Režim zobrazení:", footer_build: "WhiteIndex — Investiční pohled", style_light: "Mapa", style_sat: "Satelit"
     }
 };
-function L() { return Object.assign({}, translations.en, translations[currentMapLang] || {}); }
+const cardT = {
+    ru: { card_formats: "Форматы инвестирования", card_yield_short: "Краткосрочная доходность", card_yield_long: "Долгосрочная доходность", format_kotlovan: "Котлованный", format_rental: "Арендный доход", format_flip: "Флип (перепродажа)" },
+    en: { card_formats: "Investment formats", card_yield_short: "Short-term yield", card_yield_long: "Long-term yield", format_kotlovan: "Pre-construction", format_rental: "Rental income", format_flip: "Flip" },
+    fr: { card_toppick: "Notre choix", card_from: "à partir de", card_delivery: "Livraison", card_price: "Prix dès", card_units: "logements", card_units_pricing: "Logements et prix", card_progress: "Avancement des travaux", card_completed: "achevé", card_years: "ans", card_score: "Score d'investissement", card_forecast: "Prévision de prix", card_yield: "Rendement locatif", card_risk: "Niveau de risque", card_liquidity: "Score de liquidité", card_resale: "Délai de revente", card_demand: "Demande après livraison", card_view_details: "Voir le projet", card_compare: "Comparer", card_compared: "Comparé", risk_low: "Faible", risk_medium: "Moyen", risk_high: "Élevé", demand_high: "Élevée", demand_medium: "Moyenne", demand_low: "Faible", card_formats: "Formats d'investissement", card_yield_short: "Rendement court terme", card_yield_long: "Rendement long terme", format_kotlovan: "Sur plan", format_rental: "Revenu locatif", format_flip: "Revente (flip)" },
+    de: { card_toppick: "Top-Auswahl", card_from: "ab", card_delivery: "Fertigstellung", card_price: "Preis ab", card_units: "Einheiten", card_units_pricing: "Einheiten & Preise", card_progress: "Baufortschritt", card_completed: "fertiggestellt", card_years: "Jahre", card_score: "Investment-Score", card_forecast: "Preisprognose", card_yield: "Mietrendite", card_risk: "Risikoniveau", card_liquidity: "Liquiditäts-Score", card_resale: "Wiederverkaufsdauer", card_demand: "Nachfrage nach Übergabe", card_view_details: "Projekt ansehen", card_compare: "Vergleichen", card_compared: "Im Vergleich", risk_low: "Niedrig", risk_medium: "Mittel", risk_high: "Hoch", demand_high: "Hoch", demand_medium: "Mittel", demand_low: "Niedrig", card_formats: "Investmentformate", card_yield_short: "Rendite kurzfristig", card_yield_long: "Rendite langfristig", format_kotlovan: "Off-Plan", format_rental: "Mieteinnahmen", format_flip: "Wiederverkauf (Flip)" },
+    he: { card_toppick: "בחירה מובילה", card_from: "החל מ-", card_delivery: "מסירה", card_price: "מחיר החל מ-", card_units: "יחידות", card_units_pricing: "יחידות ומחירים", card_progress: "התקדמות הבנייה", card_completed: "הושלם", card_years: "שנים", card_score: "ציון השקעה", card_forecast: "תחזית מחיר", card_yield: "תשואת שכירות", card_risk: "רמת סיכון", card_liquidity: "ציון נזילות", card_resale: "זמן מכירה חוזרת", card_demand: "ביקוש לאחר מסירה", card_view_details: "פרטי הפרויקט", card_compare: "השוואה", card_compared: "בהשוואה", risk_low: "נמוך", risk_medium: "בינוני", risk_high: "גבוה", demand_high: "גבוה", demand_medium: "בינוני", demand_low: "נמוך", card_formats: "פורמטי השקעה", card_yield_short: "תשואה לטווח קצר", card_yield_long: "תשואה לטווח ארוך", format_kotlovan: "לפני בנייה", format_rental: "הכנסה משכירות", format_flip: "מכירה חוזרת (פליפ)" },
+    es: { card_toppick: "Destacado", card_from: "desde", card_delivery: "Entrega", card_price: "Precio desde", card_units: "unidades", card_units_pricing: "Unidades y precios", card_progress: "Avance de obra", card_completed: "completado", card_years: "años", card_score: "Puntuación de inversión", card_forecast: "Previsión de precio", card_yield: "Rentabilidad de alquiler", card_risk: "Nivel de riesgo", card_liquidity: "Puntuación de liquidez", card_resale: "Tiempo de reventa", card_demand: "Demanda tras la entrega", card_view_details: "Ver proyecto", card_compare: "Comparar", card_compared: "Comparando", risk_low: "Bajo", risk_medium: "Medio", risk_high: "Alto", demand_high: "Alta", demand_medium: "Media", demand_low: "Baja", card_formats: "Formatos de inversión", card_yield_short: "Rentabilidad corto plazo", card_yield_long: "Rentabilidad largo plazo", format_kotlovan: "Sobre plano", format_rental: "Ingresos por alquiler", format_flip: "Reventa (flip)" },
+    pt: { card_toppick: "Destaque", card_from: "a partir de", card_delivery: "Entrega", card_price: "Preço a partir de", card_units: "unidades", card_units_pricing: "Unidades e preços", card_progress: "Andamento da obra", card_completed: "concluído", card_years: "anos", card_score: "Pontuação de investimento", card_forecast: "Previsão de preço", card_yield: "Rentabilidade de aluguel", card_risk: "Nível de risco", card_liquidity: "Pontuação de liquidez", card_resale: "Tempo de revenda", card_demand: "Demanda após entrega", card_view_details: "Ver projeto", card_compare: "Comparar", card_compared: "Comparando", risk_low: "Baixo", risk_medium: "Médio", risk_high: "Alto", demand_high: "Alta", demand_medium: "Média", demand_low: "Baixa", card_formats: "Formatos de investimento", card_yield_short: "Rentabilidade curto prazo", card_yield_long: "Rentabilidade longo prazo", format_kotlovan: "Na planta", format_rental: "Renda de aluguel", format_flip: "Revenda (flip)" },
+    zh: { card_toppick: "优选", card_from: "自", card_delivery: "交付", card_price: "起价", card_units: "套", card_units_pricing: "户型与价格", card_progress: "施工进度", card_completed: "完成", card_years: "年", card_score: "投资评分", card_forecast: "价格预测", card_yield: "租金收益率", card_risk: "风险等级", card_liquidity: "流动性评分", card_resale: "转售周期", card_demand: "交付后需求", card_view_details: "查看项目", card_compare: "对比", card_compared: "对比中", risk_low: "低", risk_medium: "中", risk_high: "高", demand_high: "高", demand_medium: "中", demand_low: "低", card_formats: "投资形式", card_yield_short: "短租收益率", card_yield_long: "长租收益率", format_kotlovan: "期房", format_rental: "租金收益", format_flip: "转售获利" },
+    pl: { card_toppick: "Top wybór", card_from: "od", card_delivery: "Termin oddania", card_price: "Cena od", card_units: "lokali", card_units_pricing: "Lokale i ceny", card_progress: "Postęp budowy", card_completed: "ukończono", card_years: "lata", card_score: "Ocena inwestycyjna", card_forecast: "Prognoza ceny", card_yield: "Rentowność najmu", card_risk: "Poziom ryzyka", card_liquidity: "Ocena płynności", card_resale: "Czas odsprzedaży", card_demand: "Popyt po oddaniu", card_view_details: "Zobacz projekt", card_compare: "Porównaj", card_compared: "W porównaniu", risk_low: "Niskie", risk_medium: "Średnie", risk_high: "Wysokie", demand_high: "Wysoki", demand_medium: "Średni", demand_low: "Niski", card_formats: "Formaty inwestycji", card_yield_short: "Rentowność krótkoterminowa", card_yield_long: "Rentowność długoterminowa", format_kotlovan: "Na etapie budowy", format_rental: "Dochód z najmu", format_flip: "Odsprzedaż (flip)" },
+    cs: { card_toppick: "Top výběr", card_from: "od", card_delivery: "Termín dokončení", card_price: "Cena od", card_units: "jednotek", card_units_pricing: "Jednotky a ceny", card_progress: "Průběh výstavby", card_completed: "dokončeno", card_years: "let", card_score: "Investiční skóre", card_forecast: "Predikce ceny", card_yield: "Výnos z pronájmu", card_risk: "Úroveň rizika", card_liquidity: "Skóre likvidity", card_resale: "Doba dalšího prodeje", card_demand: "Poptávka po předání", card_view_details: "Zobrazit projekt", card_compare: "Porovnat", card_compared: "V porovnání", risk_low: "Nízké", risk_medium: "Střední", risk_high: "Vysoké", demand_high: "Vysoká", demand_medium: "Střední", demand_low: "Nízká", card_formats: "Investiční formáty", card_yield_short: "Krátkodobý výnos", card_yield_long: "Dlouhodobý výnos", format_kotlovan: "Ve výstavbě", format_rental: "Příjem z pronájmu", format_flip: "Další prodej (flip)" }
+};
+function L() { return Object.assign({}, translations.en, cardT.en || {}, translations[currentMapLang] || {}, cardT[currentMapLang] || {}); }
 function initMapLocalization() {
     let userLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase().split('-')[0];
     if (userLang === 'iw') userLang = 'he';
@@ -237,7 +249,7 @@ function mapRow(r) {
         id: r.id, name: r.name, status: r.status,
         location: { district: r.district, city: r.city, country: r.country },
         coordinates: [Number(r.lng), Number(r.lat)],
-        coverImage: r.cover_image || null, investmentThesis: r.investment_thesis || '',
+        coverImage: r.cover_image || null, coverImages: (Array.isArray(r.cover_images) && r.cover_images.length) ? r.cover_images : (r.cover_image ? [r.cover_image] : []), investmentFormats: Array.isArray(r.investment_formats) ? r.investment_formats : [], investmentThesis: r.investment_thesis || '',
         delivery: r.delivery || { type: 'single', date: null, phases: null },
         units: r.units || [], priceRange: { min: r.price_min, max: r.price_max, currency: r.currency || 'USD' },
         constructionProgress: r.construction_progress || null, description: r.description || '',
@@ -271,24 +283,51 @@ function riskTone(l) { if (l === 'Low') return 'good'; if (l === 'High') return 
 function demandTone(l) { if (l === 'High') return 'good'; if (l === 'Low') return 'muted'; return 'warn'; }
 function profileRow(label, v) { if (v == null || v === '') return ''; return `<div class="wi-ip-row"><span class="wi-ip-row-label">${label}</span><span class="wi-ip-row-value">${v}</span></div>`; }
 
+function rangeStr(min, max, suffix) {
+    if (min == null && max == null) return '';
+    if (min != null && max != null && Number(min) !== Number(max)) return min + '\u2013' + max + suffix;
+    return (min != null ? min : max) + suffix;
+}
+function wiGallery(images) {
+    const imgs = images.map(u => '<img class="wi-gallery-img" src="' + escapeHTML(u) + '" alt="" onerror="this.style.visibility=\'hidden\'">').join('');
+    let controls = '';
+    if (images.length > 1) {
+        const dots = images.map((_, i) => '<span class="' + (i === 0 ? 'is-active' : '') + '"></span>').join('');
+        controls = '<button class="wi-gallery-arrow left" aria-label="prev" onclick="event.stopPropagation();wiGalleryArrow(this,-1)">\u2039</button><button class="wi-gallery-arrow right" aria-label="next" onclick="event.stopPropagation();wiGalleryArrow(this,1)">\u203a</button><div class="wi-gallery-dots">' + dots + '</div><span class="wi-gallery-count">1 / ' + images.length + '</span>';
+    }
+    return '<div class="wi-gallery"><div class="wi-gallery-strip" onscroll="wiGalleryScroll(this)">' + imgs + '</div>' + controls + '</div>';
+}
+function wiGalleryArrow(btn, dir) {
+    const g = btn.closest('.wi-gallery'); if (!g) return;
+    const strip = g.querySelector('.wi-gallery-strip');
+    strip.scrollBy({ left: dir * strip.clientWidth, behavior: 'smooth' });
+}
+function wiGalleryScroll(strip) {
+    const g = strip.closest('.wi-gallery'); if (!g) return;
+    const n = strip.children.length;
+    const i = Math.round(strip.scrollLeft / Math.max(1, strip.clientWidth));
+    g.querySelectorAll('.wi-gallery-dots span').forEach((d, k) => d.classList.toggle('is-active', k === i));
+    const c = g.querySelector('.wi-gallery-count'); if (c) c.textContent = (i + 1) + ' / ' + n;
+}
 function renderProjectCard(p) {
     const t = L(); const ip = p.investmentProfile || {};
     const isSold = p.status === 'sold_out'; const topPick = ip.investmentScore != null && ip.investmentScore >= 85;
-    const coverInner = p.coverImage ? `<img class="wi-card-cover-img" src="${escapeHTML(p.coverImage)}" alt="${escapeHTML(p.name)}" onerror="this.classList.add('is-failed')">` : '';
-    const topPickBadge = topPick ? `<span class="wi-card-toppick">★ ${t.card_toppick}</span>` : '';
-    const cover = `<div class="wi-card-cover">${coverInner}<div class="wi-card-cover-fallback"><svg width="54" height="54" viewBox="0 0 24 24" fill="none"><path d="M3 21V9L12 3L21 9V21H15V15H9V21H3Z" fill="${statusColor(p.status)}"/></svg></div><span class="wi-card-status status-${p.status}">${statusLabel(p.status)}</span>${topPickBadge}</div>`;
+    const coverImgs = (Array.isArray(p.coverImages) && p.coverImages.length) ? p.coverImages : (p.coverImage ? [p.coverImage] : []);
+    const coverMedia = coverImgs.length ? wiGallery(coverImgs) : '';
+    const topPickBadge = topPick ? `<span class="wi-card-toppick">\u2605 ${t.card_toppick}</span>` : '';
+    const cover = `<div class="wi-card-cover">${coverMedia}<div class="wi-card-cover-fallback"><svg width="54" height="54" viewBox="0 0 24 24" fill="none"><path d="M3 21V9L12 3L21 9V21H15V15H9V21H3Z" fill="${statusColor(p.status)}"/></svg></div><span class="wi-card-status status-${p.status}">${statusLabel(p.status)}</span>${topPickBadge}</div>`;
     const loc = p.location || {};
     const locText = [loc.district, loc.city, loc.country].filter(Boolean).map(escapeHTML).join(', ');
     const thesis = p.investmentThesis ? `<p class="wi-card-thesis">${escapeHTML(p.investmentThesis)}</p>` : '';
-    const header = `<div class="wi-card-headblock"><h3 class="wi-card-name">${escapeHTML(p.name)}</h3>${locText ? `<div class="wi-card-loc">📍 ${locText}</div>` : ''}${thesis}</div>`;
+    const header = `<div class="wi-card-headblock"><h3 class="wi-card-name">${escapeHTML(p.name)}</h3>${locText ? `<div class="wi-card-loc">\ud83d\udccd ${locText}</div>` : ''}${thesis}</div>`;
     const priceFromVal = (p.priceRange && p.priceRange.min != null) ? `${t.card_from} ${fmtMoney(p.priceRange.min, p.priceRange.currency)}` : '';
     let keyBlock = ''; const d = p.delivery || {};
     if (d.type === 'phased' && Array.isArray(d.phases) && d.phases.length) {
         const steps = d.phases.map((ph, i) => `<div class="wi-step ${i === 0 ? 'is-current' : ''}"><span class="wi-step-dot"></span><span class="wi-step-name">${escapeHTML(ph.name)}</span><span class="wi-step-date">${escapeHTML(ph.date)}</span></div>`).join('<span class="wi-step-line"></span>');
-        keyBlock = `<div class="wi-card-keyrow phased"><div class="wi-key-label">📅 ${t.card_delivery}</div><div class="wi-stepper">${steps}</div>${priceFromVal ? `<div class="wi-key-price ${isSold ? 'is-dimmed' : ''}">💰 ${priceFromVal}</div>` : ''}</div>`;
+        keyBlock = `<div class="wi-card-keyrow phased"><div class="wi-key-label">\ud83d\udcc5 ${t.card_delivery}</div><div class="wi-stepper">${steps}</div>${priceFromVal ? `<div class="wi-key-price ${isSold ? 'is-dimmed' : ''}">\ud83d\udcb0 ${priceFromVal}</div>` : ''}</div>`;
     } else {
         const deliveryVal = d.date ? escapeHTML(d.date) : '';
-        keyBlock = `<div class="wi-card-keyrow">${deliveryVal ? `<div class="wi-key-cell"><div class="wi-key-label">📅 ${t.card_delivery}</div><div class="wi-key-big">${deliveryVal}</div></div>` : ''}${priceFromVal ? `<div class="wi-key-cell"><div class="wi-key-label">💰 ${t.card_price}</div><div class="wi-key-big ${isSold ? 'is-dimmed' : ''}">${fmtMoney(p.priceRange.min, p.priceRange.currency)}</div></div>` : ''}</div>`;
+        keyBlock = `<div class="wi-card-keyrow">${deliveryVal ? `<div class="wi-key-cell"><div class="wi-key-label">\ud83d\udcc5 ${t.card_delivery}</div><div class="wi-key-big">${deliveryVal}</div></div>` : ''}${priceFromVal ? `<div class="wi-key-cell"><div class="wi-key-label">\ud83d\udcb0 ${t.card_price}</div><div class="wi-key-big ${isSold ? 'is-dimmed' : ''}">${fmtMoney(p.priceRange.min, p.priceRange.currency)}</div></div>` : ''}</div>`;
     }
     let unitsBlock = '';
     if (Array.isArray(p.units) && p.units.length) {
@@ -296,9 +335,11 @@ function renderProjectCard(p) {
         unitsBlock = `<div class="wi-card-section"><div class="wi-section-title">${t.card_units_pricing}</div><div class="wi-unit-list">${rows}</div></div>`;
     }
     let progressBlock = ''; const cp = p.constructionProgress;
-    if (cp && cp.photoUrl) {
+    const cPhotos = cp ? ((Array.isArray(cp.photos) && cp.photos.length) ? cp.photos : (cp.photoUrl ? [cp.photoUrl] : [])) : [];
+    if (cp && (cPhotos.length || cp.percent != null || cp.statusText)) {
         const pct = cp.percent != null ? cp.percent : 0;
-        progressBlock = `<div class="wi-card-section wi-progress" data-block="progress"><div class="wi-section-title">${t.card_progress}</div><div class="wi-progress-photo"><img src="${escapeHTML(cp.photoUrl)}" alt="${t.card_progress}" onerror="var b=this.closest('[data-block=progress]'); if(b) b.style.display='none'"></div><div class="wi-progress-meta"><span class="wi-progress-status">${escapeHTML(cp.statusText || '')}</span><span class="wi-progress-pct">${pct}% ${t.card_completed}</span></div><div class="wi-progress-bar"><span style="width:${Math.max(0, Math.min(100, pct))}%"></span></div></div>`;
+        const media = cPhotos.length ? `<div class="wi-progress-gallery">${wiGallery(cPhotos)}</div>` : '';
+        progressBlock = `<div class="wi-card-section wi-progress"><div class="wi-section-title">${t.card_progress}</div>${media}<div class="wi-progress-meta"><span class="wi-progress-status">${escapeHTML(cp.statusText || '')}</span><span class="wi-progress-pct">${pct}% ${t.card_completed}</span></div><div class="wi-progress-bar"><span style="width:${Math.max(0, Math.min(100, pct))}%"></span></div></div>`;
     }
     let descBlock = '';
     if (p.description || (Array.isArray(p.highlights) && p.highlights.length)) {
@@ -306,20 +347,35 @@ function renderProjectCard(p) {
         const tags = (Array.isArray(p.highlights) && p.highlights.length) ? `<div class="wi-card-tags">${p.highlights.map(h => `<span class="wi-tag">${escapeHTML(h)}</span>`).join('')}</div>` : '';
         descBlock = `<div class="wi-card-section">${desc}${tags}</div>`;
     }
-    const forecast = (ip.priceForecast && ip.priceForecast.growthPercent != null) ? `<span class="wi-ip-up">+${ip.priceForecast.growthPercent}%</span> / ${ip.priceForecast.periodYears} ${t.card_years}` : '';
-    const yieldV = ip.rentalYield != null ? `${ip.rentalYield}%` : '';
+    const formats = Array.isArray(p.investmentFormats) ? p.investmentFormats : [];
+    let formatsBlock = '';
+    if (formats.length) {
+        const fmtLabel = { kotlovan: t.format_kotlovan, rental: t.format_rental, flip: t.format_flip };
+        const chips = formats.map(f => `<span class="wi-fmt">${escapeHTML(fmtLabel[f] || f)}</span>`).join('');
+        formatsBlock = `<div class="wi-card-section"><div class="wi-section-title">${t.card_formats}</div><div class="wi-fmt-row">${chips}</div></div>`;
+    }
+    const pf = ip.priceForecast || {};
+    const gr = rangeStr(pf.growthMin, pf.growthMax, '%');
+    let forecast = '';
+    if (gr) forecast = `<span class="wi-ip-up">+${gr}</span> / ${pf.periodYears} ${t.card_years}`;
+    else if (pf.growthPercent != null) forecast = `<span class="wi-ip-up">+${pf.growthPercent}%</span> / ${pf.periodYears} ${t.card_years}`;
+    const yShort = rangeStr(ip.yieldShortMin, ip.yieldShortMax, '%');
+    const yLong = rangeStr(ip.yieldLongMin, ip.yieldLongMax, '%');
+    let yieldRows = '';
+    if (yShort || yLong) { yieldRows = profileRow(t.card_yield_short, yShort) + profileRow(t.card_yield_long, yLong); }
+    else if (ip.rentalYield != null) { yieldRows = profileRow(t.card_yield, `${ip.rentalYield}%`); }
     const riskV = ip.riskLevel ? `<span class="wi-pill ${riskTone(ip.riskLevel)}">${t['risk_' + ip.riskLevel.toLowerCase()] || ip.riskLevel}</span>` : '';
     const liqV = ip.liquidityScore != null ? `${ip.liquidityScore}/100` : '';
     const resaleV = ip.resaleTime ? escapeHTML(ip.resaleTime) : '';
     const demandV = ip.demandAfterKeys ? `<span class="wi-pill ${demandTone(ip.demandAfterKeys)}">${t['demand_' + ip.demandAfterKeys.toLowerCase()] || ip.demandAfterKeys}</span>` : '';
-    const devStatus = ip.developerStatus ? `<span class="wi-dev-status status-${ip.developerStatus.toLowerCase()}">${escapeHTML(ip.developerStatus)}</span>` : '';
+    const devStatus = (ip.developerStatus && ip.developerStatus !== 'Not rated') ? `<span class="wi-dev-status status-${ip.developerStatus.toLowerCase()}">${escapeHTML(ip.developerStatus)}</span>` : '';
     let profileBlock = '';
     if (Object.keys(ip).length) {
-        profileBlock = `<div class="wi-ip-block ${topPick ? 'is-toppick' : ''}"><div class="wi-ip-header">${t.card_profile_title}</div><div class="wi-ip-top"><div class="wi-ip-score">${ip.investmentScore != null ? `<span class="wi-ip-score-num">${ip.investmentScore}</span><span class="wi-ip-score-max">/100</span>` : ''}<span class="wi-ip-score-label">${t.card_score}</span></div><div class="wi-ip-dev">${ip.developer ? `<span class="wi-ip-dev-name">${escapeHTML(ip.developer)}</span>` : ''}${devStatus}</div></div><div class="wi-ip-rows">${profileRow(t.card_forecast, forecast)}${profileRow(t.card_yield, yieldV)}${profileRow(t.card_risk, riskV)}${profileRow(t.card_liquidity, liqV)}${profileRow(t.card_resale, resaleV)}${profileRow(t.card_demand, demandV)}</div></div>`;
+        profileBlock = `<div class="wi-ip-block ${topPick ? 'is-toppick' : ''}"><div class="wi-ip-header">${t.card_profile_title}</div><div class="wi-ip-top"><div class="wi-ip-score">${ip.investmentScore != null ? `<span class="wi-ip-score-num">${ip.investmentScore}</span><span class="wi-ip-score-max">/100</span>` : ''}<span class="wi-ip-score-label">${t.card_score}</span></div><div class="wi-ip-dev">${ip.developer ? `<span class="wi-ip-dev-name">${escapeHTML(ip.developer)}</span>` : ''}${devStatus}</div></div><div class="wi-ip-rows">${profileRow(t.card_forecast, forecast)}${yieldRows}${profileRow(t.card_risk, riskV)}${profileRow(t.card_liquidity, liqV)}${profileRow(t.card_resale, resaleV)}${profileRow(t.card_demand, demandV)}</div></div>`;
     }
     const compared = comparedIds.has(p.id);
-    const cta = `<div class="wi-card-cta-row"><a class="wi-card-btn primary" href="${escapeHTML(p.ctaUrl || '#')}">${t.card_view_details}</a><button class="wi-card-btn ghost ${compared ? 'is-active' : ''}" onclick="toggleCompare('${escapeHTML(p.id)}', this)">${compared ? '✓ ' + t.card_compared : '+ ' + t.card_compare}</button></div>`;
-    return cover + `<div class="wi-card-scrollbody">` + header + keyBlock + unitsBlock + progressBlock + descBlock + profileBlock + cta + `</div>`;
+    const cta = `<div class="wi-card-cta-row"><a class="wi-card-btn primary" href="${escapeHTML(p.ctaUrl || '#')}">${t.card_view_details}</a><button class="wi-card-btn ghost ${compared ? 'is-active' : ''}" onclick="toggleCompare('${escapeHTML(p.id)}', this)">${compared ? '\u2713 ' + t.card_compared : '+ ' + t.card_compare}</button></div>`;
+    return cover + `<div class="wi-card-scrollbody">` + header + keyBlock + unitsBlock + progressBlock + descBlock + formatsBlock + profileBlock + cta + `</div>`;
 }
 function toggleCompare(id, btn) {
     const t = L();
@@ -347,7 +403,7 @@ function ensurePinImages() {
 function projectsGeoJSON() {
     return { type: 'FeatureCollection', features: projects
         .filter(p => p && Array.isArray(p.coordinates) && isFinite(p.coordinates[0]) && isFinite(p.coordinates[1]))
-        .map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [Number(p.coordinates[0]), Number(p.coordinates[1])] }, properties: { id: String(p.id), status: p.status || 'construction', name: p.name || '' } })) };
+        .map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [Number(p.coordinates[0]), Number(p.coordinates[1])] }, properties: { id: String(p.id), status: p.status || 'construction', name: p.name || '', icon: 'wi-pin-' + (p.status || 'construction') } })) };
 }
 function statusFilter() { return ['in', ['get', 'status'], ['literal', Array.from(visibleStatuses)]]; }
 function activeFilter() { return ['==', ['get', 'id'], activeProjectId == null ? '__none__' : String(activeProjectId)]; }
@@ -358,12 +414,12 @@ function renderProjectMarkers() {
     if (map.getSource('wi-projects')) { map.getSource('wi-projects').setData(data); }
     else { map.addSource('wi-projects', { type: 'geojson', data: data }); }
     if (!map.getLayer('wi-projects-active')) {
-        map.addLayer({ id: 'wi-projects-active', type: 'circle', source: 'wi-projects', filter: activeFilter(),
+        map.addLayer({ id: 'wi-projects-active', type: 'circle', source: 'wi-projects', slot: 'top', filter: activeFilter(),
             paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 9, 13, 12, 18, 15, 24, 17, 28], 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-width': 3, 'circle-stroke-color': pinStrokeColor(), 'circle-stroke-opacity': 0.5 } });
     } else { map.setFilter('wi-projects-active', activeFilter()); }
     if (!map.getLayer('wi-projects-pins')) {
-        map.addLayer({ id: 'wi-projects-pins', type: 'symbol', source: 'wi-projects', filter: statusFilter(),
-            layout: { 'icon-image': ['concat', 'wi-pin-', ['get', 'status']], 'icon-size': ['interpolate', ['linear'], ['zoom'], 9, 0.45, 12, 0.72, 15, 1, 17, 1.12], 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
+        map.addLayer({ id: 'wi-projects-pins', type: 'symbol', source: 'wi-projects', slot: 'top', filter: statusFilter(),
+            layout: { 'icon-image': ['get', 'icon'], 'icon-size': ['interpolate', ['linear'], ['zoom'], 9, 0.45, 12, 0.72, 15, 1, 17, 1.12], 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
     } else { map.setFilter('wi-projects-pins', statusFilter()); }
     applyProjectVisibility();
 }
@@ -463,12 +519,13 @@ map.on('load', () => {
     map.on('mouseenter', 'wi-projects-pins', () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'wi-projects-pins', () => { map.getCanvas().style.cursor = ''; });
     const mapEl = document.getElementById('mapbox-panama-container');
-    const doResize = () => map.resize();
-    [100, 300, 700, 1500, 3000].forEach(t => setTimeout(doResize, t));
-    if (window.ResizeObserver) { try { new ResizeObserver(doResize).observe(mapEl); } catch (e) {} }
-    window.addEventListener('resize', doResize);
+    const forceRender = () => { try { map.resize(); map.triggerRepaint(); } catch (e) {} };
+    [0, 100, 300, 700, 1500, 3000].forEach(t => setTimeout(forceRender, t));
+    if (window.ResizeObserver) { try { new ResizeObserver(forceRender).observe(mapEl); } catch (e) {} }
+    window.addEventListener('resize', forceRender);
+    map.once('idle', () => { forceRender(); try { map.panBy([0, 1], { duration: 0 }); map.panBy([0, -1], { duration: 0 }); } catch (e) {} });
 });
-map.on('style.load', () => { setupMapLayersAndEvents(); renderProjectMarkers(); });
+map.on('style.load', () => { try { map.setConfigProperty('basemap', 'showPointOfInterestLabels', false); map.setConfigProperty('basemap', 'showTransitLabels', false); } catch (e) {} setupMapLayersAndEvents(); renderProjectMarkers(); });
     function openSidebar() { var s = document.getElementById('wi-sidebar-element'); var b = document.getElementById('wi-sidebar-backdrop'); if (s) s.classList.add('is-open'); if (b) b.classList.add('is-open'); }
 function closeSidebar() { var s = document.getElementById('wi-sidebar-element'); var b = document.getElementById('wi-sidebar-backdrop'); if (s) s.classList.remove('is-open'); if (b) b.classList.remove('is-open'); }
 function toggleSidebar() { var s = document.getElementById('wi-sidebar-element'); if (s && s.classList.contains('is-open')) closeSidebar(); else openSidebar(); }
@@ -714,6 +771,20 @@ document.addEventListener('mousedown', (e) => { if (!mapContainer.contains(e.tar
     .wi-panel-backdrop { display: block; position: absolute; inset: 0; background: rgba(0,0,0,0.45); opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 19; }
     .wi-panel-backdrop.is-open { opacity: 1; pointer-events: auto; }
 }
+    .wi-gallery { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+.wi-gallery-strip { display: flex; width: 100%; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; }
+.wi-gallery-strip::-webkit-scrollbar { display: none; }
+.wi-gallery-img { flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: center; }
+.wi-gallery-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(0,0,0,0.45); color: #f0e8d0; font-size: 19px; line-height: 1; cursor: pointer; z-index: 2; display: flex; align-items: center; justify-content: center; }
+.wi-gallery-arrow.left { left: 8px; }
+.wi-gallery-arrow.right { right: 8px; }
+.wi-gallery-dots { position: absolute; bottom: 9px; left: 0; right: 0; display: flex; gap: 6px; justify-content: center; z-index: 2; }
+.wi-gallery-dots span { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.4); }
+.wi-gallery-dots span.is-active { background: #C9A84C; }
+.wi-gallery-count { position: absolute; bottom: 7px; right: 12px; font-size: 11px; color: #ece4cc; z-index: 2; text-shadow: 0 1px 2px rgba(0,0,0,0.7); }
+.wi-progress-gallery { position: relative; height: 142px; border-radius: 8px; overflow: hidden; background: #16181c; margin-bottom: 10px; }
+.wi-fmt-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+.wi-fmt { display: inline-block; padding: 5px 11px; border-radius: 16px; font-size: 12px; background: rgba(201,168,76,0.16); border: 1px solid rgba(201,168,76,0.5); color: #f0e8d0; }
 </style>
 
 </body>
