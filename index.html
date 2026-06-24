@@ -408,7 +408,7 @@ function projectsGeoJSON() {
 function statusFilter() { return ['in', ['get', 'status'], ['literal', Array.from(visibleStatuses)]]; }
 function activeFilter() { return ['==', ['get', 'id'], activeProjectId == null ? '__none__' : String(activeProjectId)]; }
 function renderProjectMarkers() {
-    if (!map.isStyleLoaded()) return;
+    if (!map.isStyleLoaded()) { setTimeout(renderProjectMarkers, 200); return; }
     ensurePinImages();
     const data = projectsGeoJSON();
     if (map.getSource('wi-projects')) { map.getSource('wi-projects').setData(data); }
